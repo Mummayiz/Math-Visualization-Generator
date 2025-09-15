@@ -1,0 +1,8 @@
+# Mamin API Key for mathematical reasoning (Primary)
+MAMIN_API_KEY=AIzaSyCOecBtlN7HEruezOrllhn8FNcCxbP-Mfs
+
+# OpenAI API Key for mathematical reasoning (Fallback)
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Optional: Other API keys if needed
+# GOOGLE_API_KEY=your_google_api_key_here

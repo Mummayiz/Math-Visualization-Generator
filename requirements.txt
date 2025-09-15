@@ -1,0 +1,36 @@
+# Core dependencies
+opencv-python==4.8.1.78
+Pillow==10.0.1
+numpy==1.24.3
+matplotlib==3.7.2
+sympy==1.12
+scipy==1.11.1
+
+# OCR and image processing
+pytesseract==0.3.10
+easyocr==1.7.0
+
+# Video generation
+moviepy==1.0.3
+imageio==2.31.5
+imageio-ffmpeg==0.4.9
+
+# Text-to-speech
+pyttsx3==2.90
+gTTS==2.3.2
+
+# Web framework
+flask==2.3.3
+flask-cors==4.0.0
+
+# AI/ML libraries
+torch==2.0.1
+transformers==4.33.2
+openai==0.28.0
+
+# Additional utilities
+requests==2.31.0
+python-dotenv==1.0.0
+
+# Mamin API integration
+google-api-python-client==2.100.0
