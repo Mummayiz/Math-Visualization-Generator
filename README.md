@@ -1,215 +1,189 @@
-# AI-Powered Math Problem Solver
+# 🧮 Math Visualization Generator
 
-An intelligent system that converts handwritten or printed math problems into educational solution videos with step-by-step explanations, visual aids, and narration.
+An AI-powered math problem solver that converts handwritten or printed mathematical problems into educational videos with step-by-step explanations.
 
-## Features
+## ✨ Features
 
-- **Image Processing**: OCR extraction of mathematical text from images
-- **Mamin AI Integration**: Advanced mathematical reasoning using Mamin API
-- **Mathematical Reasoning**: AI-powered problem solving with step-by-step solutions
-- **Visual Generation**: Creates visual representations of mathematical concepts
-- **Video Creation**: Generates educational videos with animations and narration
-- **Web Interface**: User-friendly web application for easy interaction
-- **Multiple Problem Types**: Supports algebra, calculus, geometry, trigonometry, and more
-- **Fallback Systems**: Google Math API and local solving as backup options
+- **📸 Image Processing**: Upload images of math problems (handwritten or printed)
+- **🤖 AI-Powered Solving**: Uses Google's Gemini AI for mathematical reasoning
+- **🎥 Video Generation**: Creates educational videos with tutor-style explanations
+- **📊 Progress Tracking**: Real-time progress updates during processing
+- **🎯 Key Concepts**: Highlights important mathematical concepts and operations
+- **💡 Tutor Tips**: Provides helpful hints and reasoning for each step
+- **📱 Modern UI**: Clean, responsive web interface
 
-## Problem Types Supported
+## 🚀 Quick Start
 
-- Linear Equations
-- Quadratic Equations
-- Derivatives and Integrals
-- Geometry Problems
-- Trigonometry
-- Statistics
-- General Mathematical Problems
+### Prerequisites
 
-## Installation
+- Python 3.8 or higher
+- pip package manager
 
-1. **Clone the repository**:
+### Installation
+
+1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd math-visualization
+   git clone https://github.com/yourusername/math-visualization-generator.git
+   cd math-visualization-generator
    ```
 
-2. **Install Python dependencies**:
+2. **Install dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Install Tesseract OCR**:
-   - **Windows**: Download from [GitHub](https://github.com/UB-Mannheim/tesseract/wiki)
-   - **macOS**: `brew install tesseract`
-   - **Linux**: `sudo apt-get install tesseract-ocr`
-
-4. **Set up environment variables**:
+3. **Set up environment variables**
    ```bash
    cp env_example.txt .env
-   # The Mamin API key is already configured in env_example.txt
-   # Add your OpenAI API key as a fallback if needed
+   ```
+   Edit `.env` and add your API keys:
+   ```
+   MAMIN_API_KEY=your_google_gemini_api_key_here
+   OPENAI_API_KEY=your_openai_api_key_here
    ```
 
-5. **Create necessary directories**:
-   ```bash
-   mkdir uploads outputs temp
-   ```
-
-## Usage
-
-### Web Application
-
-1. **Start the Flask server**:
+4. **Run the application**
    ```bash
    python app.py
    ```
 
-2. **Open your browser** and go to `http://localhost:5000`
+5. **Open in browser**
+   Navigate to `http://localhost:5000`
 
-3. **Upload an image** containing a math problem
+## 🎯 How to Use
 
-4. **Wait for processing** (the system will extract text, solve the problem, and generate a video)
+1. **Upload Image**: Drag and drop or click to upload a math problem image
+2. **Watch Progress**: Monitor real-time processing progress (0-100%)
+3. **View Video**: Watch the generated educational video with step-by-step explanations
+4. **Download**: Save the video for offline viewing
 
-5. **Download your educational video** with step-by-step solutions
+## 🛠️ Technology Stack
 
-### API Usage
+- **Backend**: Flask (Python)
+- **AI/ML**: Google Gemini API, OpenAI API, SymPy
+- **Image Processing**: EasyOCR, Tesseract, OpenCV, Pillow
+- **Video Generation**: MoviePy
+- **Frontend**: HTML, CSS, JavaScript
+- **Mathematical Processing**: SymPy, NumPy
 
-You can also use the system programmatically:
-
-```python
-from image_processor import ImageProcessor
-from math_parser import MathParser
-from solution_engine import SolutionEngine
-from video_generator import VideoGenerator
-
-# Process an image
-processor = ImageProcessor()
-text = processor.extract_text('path/to/image.jpg')
-
-# Parse the problem
-parser = MathParser()
-problem_info = parser.parse_problem(text)
-
-# Solve the problem
-solver = SolutionEngine()
-solution = solver.solve_problem(problem_info)
-
-# Generate video
-generator = VideoGenerator()
-video_path = generator.generate_video(problem_info, solution)
-```
-
-## Configuration
-
-Edit `config.py` to customize:
-
-- Video dimensions and quality
-- Audio settings
-- Supported file formats
-- Problem type classifications
-
-## Dependencies
-
-### Core Libraries
-- **OpenCV**: Image processing and preprocessing
-- **EasyOCR**: Optical Character Recognition
-- **SymPy**: Symbolic mathematics
-- **Matplotlib**: Mathematical visualizations
-- **MoviePy**: Video generation
-- **Flask**: Web framework
-
-### AI/ML Libraries
-- **Mamin API**: Primary mathematical reasoning engine
-- **Google Math API**: Fallback mathematical reasoning
-- **OpenAI API**: Advanced mathematical reasoning (fallback)
-- **Transformers**: Natural language processing
-
-### Audio/Video
-- **gTTS**: Text-to-speech conversion
-- **FFmpeg**: Video processing
-
-## File Structure
+## 📁 Project Structure
 
 ```
-math-visualization/
+math-visualization-generator/
 ├── app.py                 # Main Flask application
 ├── config.py             # Configuration settings
 ├── image_processor.py    # Image processing and OCR
-├── math_parser.py        # Mathematical expression parsing
-├── solution_engine.py    # Problem solving engine
+├── math_parser.py        # Mathematical problem parsing
+├── solution_engine.py    # AI-powered problem solving
+├── video_generator.py    # Educational video generation
 ├── visualizer.py         # Mathematical visualizations
-├── video_generator.py    # Video creation
+├── mamin_api.py          # Google Gemini API integration
 ├── requirements.txt      # Python dependencies
 ├── templates/
-│   └── index.html       # Web interface
-├── uploads/             # Uploaded images (auto-created)
-├── outputs/             # Generated videos (auto-created)
-└── temp/               # Temporary files (auto-created)
+│   └── index.html        # Web interface
+├── static/               # CSS and JavaScript files
+├── outputs/              # Generated videos and images
+└── uploads/              # Temporary uploaded files
 ```
 
-## API Endpoints
+## 🔧 Configuration
 
-- `POST /upload`: Upload and process math problem image
-- `GET /download/<filename>`: Download generated video
-- `POST /api/solve`: Solve math problem from text
-- `GET /health`: Health check
+### API Keys
 
-## Example Usage
+The application requires API keys for AI services:
 
-1. **Upload an image** with a math problem like "Solve for x: 2x + 5 = 13"
+- **Google Gemini API** (Primary): Used for mathematical reasoning
+- **OpenAI API** (Fallback): Used when Gemini API is unavailable
 
-2. **The system will**:
-   - Extract the text using OCR
-   - Parse it as a linear equation
-   - Solve it step by step
-   - Generate visual representations
-   - Create an educational video
+### Video Settings
 
-3. **Download the video** showing:
-   - Problem statement
-   - Step 1: "Given equation: 2x + 5 = 13"
-   - Step 2: "Subtract 5 from both sides: 2x = 8"
-   - Step 3: "Divide by 2: x = 4"
-   - Final answer with verification
+You can customize video generation in `config.py`:
 
-## Troubleshooting
+```python
+VIDEO_WIDTH = 1280
+VIDEO_HEIGHT = 720
+FPS = 15
+DURATION_PER_STEP = 3  # seconds per solution step
+```
 
-### Common Issues
+## 🎨 Features in Detail
 
-1. **OCR not working**: Ensure Tesseract is installed and in PATH
-2. **Video generation fails**: Check FFmpeg installation
-3. **Audio not working**: Verify gTTS and audio codec support
-4. **OpenAI API errors**: Check API key and rate limits
+### Image Processing
+- Supports multiple image formats (PNG, JPG, JPEG, GIF, BMP, TIFF)
+- Handles both handwritten and printed mathematical text
+- Automatic image preprocessing for better OCR results
 
-### Error Messages
+### AI-Powered Solving
+- Uses Google's Gemini AI for advanced mathematical reasoning
+- Fallback to OpenAI API for reliability
+- Local SymPy solving for basic mathematical operations
+- Automatic problem type classification
 
-- "Could not extract text from image": Image quality too low or no text detected
-- "Could not solve the problem": Mathematical expression not recognized
-- "Video generation failed": Check file permissions and FFmpeg installation
+### Video Generation
+- Tutor-style educational videos
+- Key concept highlighting
+- Mathematical operation identification
+- Step-by-step reasoning explanations
+- Professional visual design
 
-## Contributing
+### Progress Tracking
+- Real-time progress updates (0-100%)
+- Detailed status messages
+- Non-blocking processing with threading
+
+## 🚀 Deployment
+
+### Local Development
+```bash
+python app.py
+```
+
+### Production Deployment
+For production, use a WSGI server like Gunicorn:
+
+```bash
+pip install gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 app:app
+```
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## License
+## 📝 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-- OpenAI for mathematical reasoning capabilities
-- SymPy for symbolic mathematics
-- EasyOCR for text extraction
+- Google Gemini AI for mathematical reasoning
+- OpenAI for fallback AI services
 - MoviePy for video generation
-- The open-source community for various libraries and tools
+- EasyOCR and Tesseract for text extraction
+- SymPy for symbolic mathematics
+- Flask for the web framework
 
-## Future Enhancements
+## 📞 Support
 
-- Support for more complex mathematical concepts
-- Interactive 3D visualizations
-- Multi-language support
-- Mobile app development
-- Integration with learning management systems
-- Real-time collaboration features
+If you encounter any issues or have questions:
+
+1. Check the [Issues](https://github.com/yourusername/math-visualization-generator/issues) page
+2. Create a new issue with detailed information
+3. Contact the maintainers
+
+## 🔮 Future Enhancements
+
+- [ ] Support for more mathematical problem types
+- [ ] Interactive video controls
+- [ ] Batch processing of multiple images
+- [ ] Custom video templates
+- [ ] Mobile app version
+- [ ] Integration with learning management systems
+
+---
+
+**Made with ❤️ for mathematics education**

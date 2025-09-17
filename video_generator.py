@@ -13,16 +13,62 @@ from config import Config
 # Import moviepy for video generation
 from moviepy.editor import *
 
+# Import text-to-speech
+try:
+    from gtts import gTTS
+    import pygame
+    AUDIO_AVAILABLE = True
+    print("Audio libraries loaded successfully!")
+except ImportError as e:
+    AUDIO_AVAILABLE = False
+    print(f"Audio libraries not available: {e}. Install gtts and pygame for audio support.")
+
 class VideoGenerator:
     """Fast and accurate video generator without animations"""
     
     def __init__(self):
         self.config = Config()
         self.ensure_directories()
+        self.audio_enabled = AUDIO_AVAILABLE
         
     def ensure_directories(self):
         """Create necessary directories"""
         Config.ensure_directories()
+        
+    def _create_audio_clip(self, text: str, duration: float) -> Optional[AudioClip]:
+        """Create audio clip from text using text-to-speech"""
+        if not self.audio_enabled:
+            return None
+            
+        try:
+            # Create temporary audio file
+            temp_audio_path = os.path.join(self.config.TEMP_FOLDER, f"temp_audio_{hash(text) % 10000}.mp3")
+            
+            # Generate speech with optimized settings
+            tts = gTTS(text=text, lang='en', slow=False)
+            tts.save(temp_audio_path)
+            
+            # Load audio clip
+            audio_clip = AudioFileClip(temp_audio_path)
+            
+            # Adjust to match duration exactly
+            if audio_clip.duration > duration:
+                # If audio is longer, cut it
+                audio_clip = audio_clip.subclip(0, duration)
+            elif audio_clip.duration < duration:
+                # If audio is shorter, pad with silence
+                silence_duration = duration - audio_clip.duration
+                silence = AudioClip(lambda t: 0, duration=silence_duration)
+                audio_clip = concatenate_audioclips([audio_clip, silence])
+            
+            # Set volume
+            audio_clip = audio_clip.volumex(self.config.VOICE_VOLUME)
+            
+            return audio_clip
+            
+        except Exception as e:
+            print(f"Audio generation failed: {e}")
+            return None
         
     def generate_video(self, problem_info: Dict[str, Any], solution: Dict[str, Any]) -> str:
         """Generate a fast, accurate video without animations"""
@@ -58,6 +104,17 @@ class VideoGenerator:
         print("Combining clips...")
         final_video = concatenate_videoclips(clips, method="compose")
         
+        # Add audio narration if available
+        if self.audio_enabled:
+            print("Adding audio narration...")
+            print(f"Video duration: {final_video.duration} seconds")
+            try:
+                final_video = self._add_audio_narration(final_video, problem_info, solution)
+                print(f"Audio narration added successfully! Final video duration: {final_video.duration} seconds")
+            except Exception as e:
+                print(f"Failed to add audio narration: {e}")
+                print("Continuing with video without audio...")
+        
         # Generate output filename
         output_filename = f"math_solution_{problem_info.get('problem_type', 'general')}.mp4"
         output_path = os.path.join(self.config.OUTPUT_FOLDER, output_filename)
@@ -74,7 +131,7 @@ class VideoGenerator:
             write_logfile=False
         )
         
-        print(f"Fast video created: {output_path}")
+        print(f"Video with audio created: {output_path}")
         return output_filename
     
     def _create_simple_intro(self, problem_info: Dict[str, Any]) -> VideoClip:
@@ -117,7 +174,7 @@ class VideoGenerator:
             
             return np.array(img)
         
-        return VideoClip(make_frame, duration=2)
+        return VideoClip(make_frame, duration=2.0)  # Fixed duration to match audio
     
     def _create_simple_problem(self, problem_info: Dict[str, Any]) -> VideoClip:
         """Create tutor-style problem presentation with analysis"""
@@ -263,7 +320,7 @@ class VideoGenerator:
             
             return np.array(img)
         
-        return VideoClip(make_frame, duration=6)
+        return VideoClip(make_frame, duration=6.0)  # Fixed duration to match audio
     
     def _generate_solution_strategy(self, problem_type: str, problem_text: str) -> str:
         """Generate solution strategy based on problem type"""
@@ -492,9 +549,8 @@ class VideoGenerator:
             
             return np.array(img)
         
-        # Longer duration for tutor-style content
-        content_length = len(step.get('description', '')) + len(step.get('explanation', ''))
-        duration = max(6, min(12, content_length // 25))  # 6-12 seconds for detailed explanations
+        # Fixed duration for audio synchronization
+        duration = 8.0  # Fixed 8 seconds per step to match audio
         return VideoClip(make_frame, duration=duration)
     
     def _extract_key_concept(self, step: Dict[str, Any]) -> str:
@@ -614,4 +670,68 @@ class VideoGenerator:
             
             return np.array(img)
         
-        return VideoClip(make_frame, duration=3)
+        return VideoClip(make_frame, duration=3.0)  # Fixed duration to match audio
+    
+    def _add_audio_narration(self, video_clip: VideoClip, problem_info: Dict[str, Any], solution: Dict[str, Any]) -> VideoClip:
+        """Add audio narration to the video with proper synchronization"""
+        try:
+            # Create separate audio clips for each section
+            audio_clips = []
+            current_time = 0
+            
+            # Introduction audio (2 seconds)
+            intro_text = f"Welcome to Math Visualization Generator. Let's solve this {problem_info.get('problem_type', 'general')} problem."
+            intro_audio = self._create_audio_clip(intro_text, 2.0)
+            if intro_audio:
+                intro_audio = intro_audio.set_start(current_time)
+                audio_clips.append(intro_audio)
+            current_time += 2.0
+            
+            # Problem audio (6 seconds)
+            problem_text = f"The problem is: {problem_info.get('original_text', 'No problem provided')}"
+            problem_audio = self._create_audio_clip(problem_text, 6.0)
+            if problem_audio:
+                problem_audio = problem_audio.set_start(current_time)
+                audio_clips.append(problem_audio)
+            current_time += 6.0
+            
+            # Solution steps audio (8 seconds per step)
+            for i, step in enumerate(solution.get('steps', []), 1):
+                step_text = f"Step {i}: {step.get('description', '')}"
+                step_audio = self._create_audio_clip(step_text, 8.0)
+                if step_audio:
+                    step_audio = step_audio.set_start(current_time)
+                    audio_clips.append(step_audio)
+                current_time += 8.0
+            
+            # Conclusion audio (3 seconds)
+            final_answer = solution.get('final_answer', 'No answer available')
+            conclusion_text = f"The final answer is {final_answer}. Thank you for watching."
+            conclusion_audio = self._create_audio_clip(conclusion_text, 3.0)
+            if conclusion_audio:
+                conclusion_audio = conclusion_audio.set_start(current_time)
+                audio_clips.append(conclusion_audio)
+            
+            # Combine all audio clips
+            if audio_clips:
+                combined_audio = concatenate_audioclips(audio_clips)
+                # Ensure audio duration matches video duration
+                if combined_audio.duration > video_clip.duration:
+                    combined_audio = combined_audio.subclip(0, video_clip.duration)
+                elif combined_audio.duration < video_clip.duration:
+                    # Add silence to match video duration
+                    silence_duration = video_clip.duration - combined_audio.duration
+                    silence = AudioClip(lambda t: 0, duration=silence_duration)
+                    combined_audio = concatenate_audioclips([combined_audio, silence])
+                
+                # Combine video and audio
+                final_video = video_clip.set_audio(combined_audio)
+                print(f"Audio narration added successfully! Video duration: {final_video.duration} seconds")
+                return final_video
+            else:
+                print("Audio generation failed, returning video without audio")
+                return video_clip
+                
+        except Exception as e:
+            print(f"Error adding audio narration: {e}")
+            return video_clip

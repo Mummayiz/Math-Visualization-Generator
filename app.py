@@ -11,6 +11,7 @@ from math_parser import MathParser
 from solution_engine import SolutionEngine
 from visualizer import MathVisualizer
 from video_generator import VideoGenerator
+from history_manager import HistoryManager
 
 app = Flask(__name__)
 CORS(app)
@@ -22,6 +23,7 @@ math_parser = MathParser()
 solution_engine = SolutionEngine()
 visualizer = MathVisualizer()
 video_generator = VideoGenerator()
+history_manager = HistoryManager()
 
 # Progress tracking
 progress_data = {}
@@ -133,6 +135,16 @@ def process_math_problem_with_progress(image_path, task_id):
         progress_data[task_id]['progress'] = 90
         progress_data[task_id]['message'] = 'Finalizing...'
         
+        # Save to history
+        video_filename = os.path.basename(video_path)
+        history_id = history_manager.save_question(
+            image_filename=os.path.basename(image_path),
+            extracted_text=extracted_text,
+            problem_info=problem_info,
+            solution=solution,
+            video_filename=video_filename
+        )
+        
         # Clean up uploaded file
         os.remove(image_path)
         
@@ -142,7 +154,8 @@ def process_math_problem_with_progress(image_path, task_id):
             'problem_info': problem_info,
             'solution': solution,
             'video_path': video_path,
-            'video_filename': os.path.basename(video_path)
+            'video_filename': video_filename,
+            'history_id': history_id
         }
         
     except Exception as e:
@@ -279,6 +292,57 @@ def solve_problem_api():
         
     except Exception as e:
         return jsonify({'error': f'Error solving problem: {str(e)}'}), 500
+
+@app.route('/api/history')
+def get_history():
+    """Get all history entries"""
+    try:
+        history = history_manager.load_history()
+        return jsonify({
+            'success': True,
+            'history': history
+        })
+    except Exception as e:
+        return jsonify({'error': f'Error loading history: {str(e)}'}), 500
+
+@app.route('/api/history/<question_id>')
+def get_history_item(question_id):
+    """Get a specific history item by ID"""
+    try:
+        question = history_manager.get_question_by_id(question_id)
+        if question:
+            return jsonify({
+                'success': True,
+                'question': question
+            })
+        else:
+            return jsonify({'error': 'Question not found'}), 404
+    except Exception as e:
+        return jsonify({'error': f'Error loading question: {str(e)}'}), 500
+
+@app.route('/api/history/<question_id>', methods=['DELETE'])
+def delete_history_item(question_id):
+    """Delete a history item by ID"""
+    try:
+        success = history_manager.delete_question(question_id)
+        if success:
+            return jsonify({'success': True})
+        else:
+            return jsonify({'error': 'Failed to delete question'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Error deleting question: {str(e)}'}), 500
+
+@app.route('/api/history/clear', methods=['POST'])
+def clear_history():
+    """Clear all history"""
+    try:
+        success = history_manager.clear_history()
+        if success:
+            return jsonify({'success': True})
+        else:
+            return jsonify({'error': 'Failed to clear history'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Error clearing history: {str(e)}'}), 500
 
 if __name__ == '__main__':
     # Ensure directories exist

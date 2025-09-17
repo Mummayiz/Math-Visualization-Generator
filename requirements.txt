@@ -15,9 +15,10 @@ moviepy==1.0.3
 imageio==2.31.5
 imageio-ffmpeg==0.4.9
 
-# Text-to-speech
+# Text-to-speech and audio
 pyttsx3==2.90
 gTTS==2.3.2
+pygame==2.5.2
 
 # Web framework
 flask==2.3.3
