@@ -2,7 +2,7 @@ services:
   - type: web
     name: math-visualization-generator
     env: python
-    pythonVersion: 3.11.9
+    pythonVersion: 3.11
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: python app.py
     envVars:
@@ -11,4 +11,4 @@ services:
       - key: PORT
         value: 10000
       - key: PYTHON_VERSION
-        value: 3.11.9
+        value: 3.11
