@@ -588,6 +588,7 @@
             <div class="header-buttons">
                 <button class="btn header-btn" id="historyBtn" onclick="showHistory()">📚 View History</button>
                 <button class="btn header-btn" id="newQuestionBtn" onclick="startNewQuestion()" style="display: none;">➕ New Question</button>
+                <button class="btn header-btn" id="speedToggle" onclick="toggleSpeedMode()">⚡ Fast Mode</button>
             </div>
         </div>
 
@@ -596,6 +597,10 @@
                 <div class="upload-icon">📸</div>
                 <div class="upload-text">Click to upload or drag and drop your math problem image</div>
                 <div class="upload-subtext">Supports PNG, JPG, JPEG, GIF, BMP, TIFF formats</div>
+                <div class="speed-indicator" id="speedIndicator" style="margin: 15px 0; padding: 10px; background: rgba(76, 175, 80, 0.1); border-radius: 8px; border: 1px solid rgba(76, 175, 80, 0.3);">
+                    <span style="color: #4CAF50; font-weight: 600;">⚡ Fast Mode Active</span>
+                    <span style="color: #666; font-size: 0.9rem; margin-left: 10px;">- Optimized for speed</span>
+                </div>
                 <input type="file" id="fileInput" class="file-input" accept="image/*">
                 <button class="btn" onclick="document.getElementById('fileInput').click()">
                     Choose Image
@@ -689,6 +694,11 @@
         const historyList = document.getElementById('historyList');
         const searchBox = document.getElementById('searchBox');
         const newQuestionBtn = document.getElementById('newQuestionBtn');
+        const speedToggle = document.getElementById('speedToggle');
+        const speedIndicator = document.getElementById('speedIndicator');
+        
+        // Speed mode state
+        let fastMode = true;  // Default to fast mode
 
         // Drag and drop functionality
         uploadSection.addEventListener('dragover', (e) => {
@@ -733,6 +743,7 @@
         function uploadFile(file) {
             const formData = new FormData();
             formData.append('image', file);
+            formData.append('fast_mode', fastMode);  // Add speed mode
 
             showLoading();
             hideResult();
@@ -900,6 +911,24 @@
                 playBtn.textContent = 'Resume Video';
             }
         });
+
+        // Speed mode toggle
+        function toggleSpeedMode() {
+            fastMode = !fastMode;
+            if (fastMode) {
+                speedToggle.textContent = '⚡ Fast Mode';
+                speedToggle.style.background = 'rgba(255, 255, 255, 0.2)';
+                speedIndicator.innerHTML = '<span style="color: #4CAF50; font-weight: 600;">⚡ Fast Mode Active</span><span style="color: #666; font-size: 0.9rem; margin-left: 10px;">- Optimized for speed</span>';
+                speedIndicator.style.background = 'rgba(76, 175, 80, 0.1)';
+                speedIndicator.style.borderColor = 'rgba(76, 175, 80, 0.3)';
+            } else {
+                speedToggle.textContent = '🎨 Quality Mode';
+                speedToggle.style.background = 'rgba(255, 193, 7, 0.3)';
+                speedIndicator.innerHTML = '<span style="color: #FF9800; font-weight: 600;">🎨 Quality Mode Active</span><span style="color: #666; font-size: 0.9rem; margin-left: 10px;">- High quality output</span>';
+                speedIndicator.style.background = 'rgba(255, 193, 7, 0.1)';
+                speedIndicator.style.borderColor = 'rgba(255, 193, 7, 0.3)';
+            }
+        }
 
         // New Question functionality
         function startNewQuestion() {

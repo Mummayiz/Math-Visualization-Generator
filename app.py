@@ -7,10 +7,12 @@ import threading
 from werkzeug.utils import secure_filename
 from config import Config
 from image_processor import ImageProcessor
+from image_processor_fast import FastImageProcessor
 from math_parser import MathParser
 from solution_engine import SolutionEngine
 from visualizer import MathVisualizer
 from video_generator import VideoGenerator
+from video_generator_fast import FastVideoGenerator
 from history_manager import HistoryManager
 
 app = Flask(__name__)
@@ -19,10 +21,12 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Initialize components
 image_processor = ImageProcessor()
+fast_image_processor = FastImageProcessor()  # Fast image processor
 math_parser = MathParser()
 solution_engine = SolutionEngine()
 visualizer = MathVisualizer()
 video_generator = VideoGenerator()
+fast_video_generator = FastVideoGenerator()  # Ultra-fast generator
 history_manager = HistoryManager()
 
 # Progress tracking
@@ -58,6 +62,9 @@ def upload_image():
         filepath = os.path.join(Config.UPLOAD_FOLDER, unique_filename)
         task_id = str(uuid.uuid4())
         
+        # Get speed mode preference
+        fast_mode = request.form.get('fast_mode', 'true').lower() == 'true'
+        
         # Save file
         file.save(filepath)
         
@@ -72,7 +79,7 @@ def upload_image():
         # Process the image in a separate thread
         def process_task():
             try:
-                result = process_math_problem_with_progress(filepath, task_id)
+                result = process_math_problem_with_progress(filepath, task_id, fast_mode)
                 progress_data[task_id]['result'] = result
                 progress_data[task_id]['status'] = 'completed'
                 progress_data[task_id]['progress'] = 100
@@ -94,14 +101,21 @@ def upload_image():
     except Exception as e:
         return jsonify({'error': f'Error processing image: {str(e)}'}), 500
 
-def process_math_problem_with_progress(image_path, task_id):
+def process_math_problem_with_progress(image_path, task_id, fast_mode=True):
     """Process a math problem from image to video with progress tracking"""
     try:
         # Step 1: Extract text from image (10%)
         print("Step 1: Extracting text from image...")
         progress_data[task_id]['progress'] = 10
         progress_data[task_id]['message'] = 'Extracting text from image...'
-        extracted_text = image_processor.extract_text(image_path)
+        
+        # Choose image processor based on speed mode
+        if fast_mode:
+            print("Using fast image processor...")
+            extracted_text = fast_image_processor.extract_text(image_path)
+        else:
+            print("Using high-quality image processor...")
+            extracted_text = image_processor.extract_text(image_path)
         
         if not extracted_text:
             return {'error': 'Could not extract text from image. Please ensure the image contains clear mathematical text.'}
@@ -128,7 +142,14 @@ def process_math_problem_with_progress(image_path, task_id):
         print("Step 4: Generating educational video...")
         progress_data[task_id]['progress'] = 75
         progress_data[task_id]['message'] = 'Generating educational video...'
-        video_path = video_generator.generate_video(problem_info, solution)
+        
+        # Choose video generator based on speed mode
+        if fast_mode:
+            print("Using ultra-fast video generator...")
+            video_path = fast_video_generator.generate_video(problem_info, solution)
+        else:
+            print("Using high-quality video generator...")
+            video_path = video_generator.generate_video(problem_info, solution)
         
         # Step 5: Finalizing (90%)
         print("Step 5: Finalizing...")

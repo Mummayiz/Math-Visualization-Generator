@@ -1,6 +1,13 @@
 # Generated test images
 problem_viz_*.png
 step_*_*.png
+test_*.png
+
+# Video outputs
+outputs/
+
+# Temporary audio files
+temp/
 
 # Python cache
 __pycache__/
@@ -30,3 +37,22 @@ Thumbs.db
 # Temporary files
 temp/
 *.tmp
+
+# Test files
+test_audio.py
+test_audio_debug.py
+test_progress.py
+test_simple_audio.py
+test_step_explanations.py
+test_system.py
+test_ui_flow.py
+test_video.py
+
+# Uploads folder
+uploads/
+
+# Generated slideshow files
+outputs/slideshow/
+
+# History file (contains user data)
+outputs/history.json
