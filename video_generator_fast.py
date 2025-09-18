@@ -16,12 +16,11 @@ from moviepy.editor import *
 # Import text-to-speech
 try:
     from gtts import gTTS
-    import pygame
     AUDIO_AVAILABLE = True
     print("Audio libraries loaded successfully!")
 except ImportError as e:
     AUDIO_AVAILABLE = False
-    print(f"Audio libraries not available: {e}. Install gtts and pygame for audio support.")
+    print(f"Audio libraries not available: {e}. Install gtts for audio support.")
 
 class FastVideoGenerator:
     """Ultra-fast video generator optimized for speed"""
