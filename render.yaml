@@ -2,10 +2,13 @@ services:
   - type: web
     name: math-visualization-generator
     env: python
-    buildCommand: pip install -r requirements.txt
+    pythonVersion: 3.11.9
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: python app.py
     envVars:
       - key: FLASK_ENV
         value: production
       - key: PORT
         value: 10000
+      - key: PYTHON_VERSION
+        value: 3.11.9
