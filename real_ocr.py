@@ -22,9 +22,11 @@ class RealOCRProcessor:
             import pytesseract
             # Try to get Tesseract version
             pytesseract.get_tesseract_version()
+            print("Tesseract is available and working")
             return True
         except Exception as e:
             print(f"Tesseract not available: {e}")
+            print("Will use basic image analysis fallback")
             return False
     
     def extract_text(self, image_path: str) -> str:

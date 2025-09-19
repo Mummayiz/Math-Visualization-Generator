@@ -22,10 +22,31 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 # Progress tracking
 progress_data = {}
 
-# Initialize real components
-ocr_processor = RealOCRProcessor()
-math_parser = RealMathParser()
-solution_engine = RealSolutionEngine()
+# Initialize real components (lazy initialization)
+ocr_processor = None
+math_parser = None
+solution_engine = None
+
+def get_ocr_processor():
+    """Get OCR processor with lazy initialization"""
+    global ocr_processor
+    if ocr_processor is None:
+        ocr_processor = RealOCRProcessor()
+    return ocr_processor
+
+def get_math_parser():
+    """Get math parser with lazy initialization"""
+    global math_parser
+    if math_parser is None:
+        math_parser = RealMathParser()
+    return math_parser
+
+def get_solution_engine():
+    """Get solution engine with lazy initialization"""
+    global solution_engine
+    if solution_engine is None:
+        solution_engine = RealSolutionEngine()
+    return solution_engine
 
 def allowed_file(filename):
     """Check if file extension is allowed"""
@@ -46,6 +67,25 @@ def health_check():
         'message': 'Math Visualization Generator is running',
         'version': '2.0.0-minimal'
     })
+
+@app.route('/test')
+def test_endpoint():
+    """Test endpoint for debugging"""
+    try:
+        return jsonify({
+            'status': 'ok',
+            'message': 'Test endpoint working',
+            'components': {
+                'ocr_processor': ocr_processor is not None,
+                'math_parser': math_parser is not None,
+                'solution_engine': solution_engine is not None
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        })
 
 @app.route('/upload', methods=['POST'])
 def upload_image():
@@ -102,7 +142,7 @@ def process_image_real(filepath, task_id):
         progress_data[task_id]['progress'] = 20
         progress_data[task_id]['message'] = 'Extracting text from image...'
         
-        extracted_text = ocr_processor.extract_text(filepath)
+        extracted_text = get_ocr_processor().extract_text(filepath)
         print(f"Extracted text: '{extracted_text}'")
         
         if not extracted_text or extracted_text.strip() == "":
@@ -114,14 +154,14 @@ def process_image_real(filepath, task_id):
         progress_data[task_id]['progress'] = 40
         progress_data[task_id]['message'] = 'Parsing mathematical problem...'
         
-        problem_info = math_parser.parse_problem(extracted_text)
+        problem_info = get_math_parser().parse_problem(extracted_text)
         print(f"Parsed problem: {problem_info}")
         
         # Step 3: Generate solution
         progress_data[task_id]['progress'] = 60
         progress_data[task_id]['message'] = 'Generating solution...'
         
-        solution = solution_engine.solve_problem(problem_info)
+        solution = get_solution_engine().solve_problem(problem_info)
         print(f"Generated solution: {solution}")
         
         # Step 4: Create result
