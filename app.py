@@ -427,6 +427,7 @@ if __name__ == '__main__':
         print(f"  - http://localhost:{port}")
         print(f"  - http://0.0.0.0:{port}")
         print("Health check available at: /health")
+        print("Railway deployment ready!")
         
         app.run(debug=False, host='0.0.0.0', port=port)
         
