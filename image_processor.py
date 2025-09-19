@@ -10,6 +10,7 @@ class ImageProcessor:
     
     def __init__(self):
         self.ocr_reader = None  # Initialize lazily to save memory
+        print("ImageProcessor initialized (EasyOCR will load on first use)")
         
     def preprocess_image(self, image_path: str) -> np.ndarray:
         """Preprocess image for better OCR results"""

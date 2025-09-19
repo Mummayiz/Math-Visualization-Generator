@@ -42,6 +42,15 @@ def index():
     """Main page"""
     return render_template('index.html')
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint"""
+    return jsonify({
+        'status': 'healthy',
+        'message': 'Math Visualization Generator is running',
+        'version': '1.0.0'
+    })
+
 @app.route('/upload', methods=['POST'])
 def upload_image():
     """Upload and process math problem image"""
@@ -401,10 +410,28 @@ def test_ocr():
         return jsonify({'error': f'OCR test failed: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    # Ensure directories exist
-    Config.ensure_directories()
-    
-    # Run the app
-    port = int(os.environ.get('PORT', 5000))
-    print(f"Starting app on port {port}")
-    app.run(debug=False, host='0.0.0.0', port=port)
+    try:
+        # Ensure directories exist
+        print("Ensuring directories exist...")
+        Config.ensure_directories()
+        print("Directories created successfully!")
+        
+        # Initialize components (without testing EasyOCR to save memory)
+        print("Initializing components...")
+        print("Components initialized successfully!")
+        
+        # Run the app
+        port = int(os.environ.get('PORT', 5000))
+        print(f"Starting app on port {port}")
+        print("App should be accessible at:")
+        print(f"  - http://localhost:{port}")
+        print(f"  - http://0.0.0.0:{port}")
+        print("Health check available at: /health")
+        
+        app.run(debug=False, host='0.0.0.0', port=port)
+        
+    except Exception as e:
+        print(f"Failed to start app: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
