@@ -10,7 +10,7 @@ class ImageProcessor:
     """Handles image preprocessing and text extraction from math problems"""
     
     def __init__(self):
-        self.ocr_reader = easyocr.Reader(['en'])
+        self.ocr_reader = None  # Initialize lazily to save memory
         
     def preprocess_image(self, image_path: str) -> np.ndarray:
         """Preprocess image for better OCR results"""
@@ -37,16 +37,13 @@ class ImageProcessor:
         return cleaned
     
     def extract_text(self, image_path: str) -> str:
-        """Extract text from image using OCR"""
+        """Extract text from image using Tesseract only to save memory"""
         try:
             # Preprocess image
             processed_image = self.preprocess_image(image_path)
             
-            # Use EasyOCR for better math symbol recognition
-            results = self.ocr_reader.readtext(processed_image)
-            
-            # Combine all text
-            extracted_text = " ".join([result[1] for result in results])
+            # Use Tesseract for OCR (memory efficient)
+            extracted_text = pytesseract.image_to_string(processed_image, config='--oem 3 --psm 6 -l eng')
             
             # Clean up the text
             cleaned_text = self._clean_math_text(extracted_text)

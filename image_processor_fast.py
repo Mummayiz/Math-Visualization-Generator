@@ -10,8 +10,9 @@ class FastImageProcessor:
     """Fast image processor optimized for speed"""
     
     def __init__(self):
-        # Initialize with minimal settings for speed
-        self.ocr_reader = easyocr.Reader(['en'], gpu=False)  # Disable GPU for stability
+        # Initialize lazily to save memory
+        self.ocr_reader = None
+        self.tesseract_config = r'--oem 3 --psm 3 -l eng'
         
     def preprocess_image_fast(self, image_path: str) -> np.ndarray:
         """Fast image preprocessing with minimal operations"""
@@ -68,5 +69,5 @@ class FastImageProcessor:
         return text.strip()
     
     def extract_text(self, image_path: str) -> str:
-        """Main extraction method - uses fast processing"""
+        """Main extraction method - uses Tesseract only to save memory"""
         return self.extract_text_fast(image_path)
