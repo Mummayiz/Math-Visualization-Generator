@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 import pytesseract
-import easyocr
 from PIL import Image
 import re
 from typing import Tuple, List, Optional
