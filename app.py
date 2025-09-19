@@ -371,4 +371,5 @@ if __name__ == '__main__':
     
     # Run the app
     port = int(os.environ.get('PORT', 5000))
+    print(f"Starting app on port {port}")
     app.run(debug=False, host='0.0.0.0', port=port)

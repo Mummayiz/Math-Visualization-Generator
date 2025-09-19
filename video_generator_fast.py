@@ -31,6 +31,10 @@ class FastVideoGenerator:
         self.audio_enabled = AUDIO_AVAILABLE
         self._audio_cache = {}  # Cache for audio clips
         
+        # Set matplotlib backend for memory efficiency
+        import matplotlib
+        matplotlib.use('Agg')
+        
     def ensure_directories(self):
         """Create necessary directories"""
         Config.ensure_directories()
