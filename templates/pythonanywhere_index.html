@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Visualization Generator (PythonAnywhere)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 800px;
+            margin: 30px auto;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+            font-size: 2.2em;
+        }
+        .upload-section {
+            border: 2px dashed #a0d9b4;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 25px;
+        }
+        .upload-section:hover {
+            background-color: #e6f7ee;
+        }
+        .upload-section input[type="file"] {
+            display: none;
+        }
+        .upload-section p {
+            margin: 10px 0;
+            color: #555;
+            font-size: 1.1em;
+        }
+        .upload-section .icon {
+            font-size: 3em;
+            color: #28a745;
+        }
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+        }
+        .progress-section {
+            margin-top: 30px;
+            text-align: center;
+            display: none;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 15px;
+            height: 25px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #28a745;
+            border-radius: 5px;
+            text-align: center;
+            line-height: 25px;
+            color: white;
+            transition: width 0.5s ease;
+        }
+        .result-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9f7ef;
+            border-radius: 10px;
+            border: 1px solid #28a745;
+            display: none;
+        }
+        .result-section h2 {
+            color: #28a745;
+            margin-top: 0;
+            font-size: 1.5em;
+        }
+        .result-section pre {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+        .error-message {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        .pythonanywhere-badge {
+            background-color: #17a2b8;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .success-message {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧮 Math Visualization Generator</h1>
+        <div class="pythonanywhere-badge">🚀 PYTHONANYWHERE - Reliable & Free!</div>
+        
+        <div id="uploadSection" class="upload-section">
+            <input type="file" id="imageUpload" accept="image/*">
+            <div class="icon">⬆️</div>
+            <p>Drag & drop your math problem image here, or click to upload</p>
+            <button class="btn btn-primary" onclick="document.getElementById('imageUpload').click()">Upload Image</button>
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-secondary" id="newQuestionBtn" style="display: none;">New Question</button>
+            <button class="btn btn-secondary" id="viewHistoryBtn">View History</button>
+        </div>
+
+        <div id="progressSection" class="progress-section">
+            <h2>Processing your problem...</h2>
+            <p id="progressMessage">Starting...</p>
+            <div class="progress-bar-container">
+                <div id="progressBar" class="progress-bar">0%</div>
+            </div>
+        </div>
+
+        <div id="resultSection" class="result-section">
+            <h2>Result</h2>
+            <p><strong>Problem:</strong> <span id="problemText"></span></p>
+            <p><strong>Answer:</strong> <span id="solutionText"></span></p>
+            <h3>Solution Steps:</h3>
+            <pre id="stepsText"></pre>
+        </div>
+
+        <div id="successMessage" class="success-message"></div>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <script>
+        const uploadSection = document.getElementById('uploadSection');
+        const imageUpload = document.getElementById('imageUpload');
+        const progressSection = document.getElementById('progressSection');
+        const progressBar = document.getElementById('progressBar');
+        const progressMessage = document.getElementById('progressMessage');
+        const resultSection = document.getElementById('resultSection');
+        const problemText = document.getElementById('problemText');
+        const solutionText = document.getElementById('solutionText');
+        const stepsText = document.getElementById('stepsText');
+        const successMessageDiv = document.getElementById('successMessage');
+        const errorMessageDiv = document.getElementById('errorMessage');
+        const newQuestionBtn = document.getElementById('newQuestionBtn');
+        const viewHistoryBtn = document.getElementById('viewHistoryBtn');
+
+        let currentTaskId = null;
+
+        // Drag and drop functionality
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.style.backgroundColor = '#e6f7ee';
+        });
+
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.style.backgroundColor = '#ffffff';
+        });
+
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.style.backgroundColor = '#ffffff';
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                imageUpload.files = files;
+                handleImageUpload();
+            }
+        });
+
+        imageUpload.addEventListener('change', handleImageUpload);
+        newQuestionBtn.addEventListener('click', resetUI);
+
+        function handleImageUpload() {
+            const file = imageUpload.files[0];
+            if (!file) return;
+
+            resetUI();
+            uploadSection.style.display = 'none';
+            progressSection.style.display = 'block';
+            errorMessageDiv.style.display = 'none';
+            successMessageDiv.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentTaskId = data.task_id;
+                    pollProgress();
+                } else {
+                    showError(data.error);
+                    resetUI();
+                }
+            })
+            .catch(error => {
+                console.error('Upload error:', error);
+                showError('An error occurred during upload.');
+                resetUI();
+            });
+        }
+
+        function pollProgress() {
+            if (!currentTaskId) return;
+
+            const interval = setInterval(() => {
+                fetch(`/progress/${currentTaskId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'completed') {
+                            clearInterval(interval);
+                            updateProgressBar(data.progress, data.message);
+                            showResult(data.result);
+                            newQuestionBtn.style.display = 'inline-flex';
+                        } else if (data.status === 'error') {
+                            clearInterval(interval);
+                            showError(data.message);
+                            resetUI();
+                        } else {
+                            updateProgressBar(data.progress, data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Progress polling error:', error);
+                        clearInterval(interval);
+                        showError('An error occurred while checking progress.');
+                        resetUI();
+                    });
+            }, 1000);
+        }
+
+        function updateProgressBar(progress, message) {
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = progress + '%';
+            progressMessage.textContent = message;
+        }
+
+        function showResult(result) {
+            progressSection.style.display = 'none';
+            resultSection.style.display = 'block';
+            successMessageDiv.style.display = 'block';
+            successMessageDiv.textContent = 'PythonAnywhere processing completed successfully!';
+            
+            if (result) {
+                problemText.textContent = result.problem || 'Math problem detected';
+                solutionText.textContent = result.answer || result.solution || 'Solution generated';
+                
+                if (result.steps && Array.isArray(result.steps)) {
+                    stepsText.textContent = result.steps.join('\n');
+                } else if (result.steps) {
+                    stepsText.textContent = result.steps;
+                } else {
+                    stepsText.textContent = 'Steps generated successfully';
+                }
+            }
+        }
+
+        function showError(message) {
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.style.display = 'block';
+            progressSection.style.display = 'none';
+            resultSection.style.display = 'none';
+            uploadSection.style.display = 'block';
+            newQuestionBtn.style.display = 'none';
+        }
+
+        function resetUI() {
+            uploadSection.style.display = 'block';
+            progressSection.style.display = 'none';
+            resultSection.style.display = 'none';
+            errorMessageDiv.style.display = 'none';
+            successMessageDiv.style.display = 'none';
+            newQuestionBtn.style.display = 'none';
+            imageUpload.value = '';
+            currentTaskId = null;
+            updateProgressBar(0, 'Starting...');
+        }
+    </script>
+</body>
+</html>
