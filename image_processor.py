@@ -38,6 +38,11 @@ class ImageProcessor:
     def extract_text(self, image_path: str) -> str:
         """Extract text from image using Tesseract only to save memory"""
         try:
+            # First, try to extract text from the original image without preprocessing
+            print("Trying original image...")
+            original_text = pytesseract.image_to_string(image_path, config='--oem 3 --psm 6 -l eng')
+            print(f"Original image text: '{original_text}'")
+            
             # Preprocess image
             processed_image = self.preprocess_image(image_path)
             
@@ -48,21 +53,26 @@ class ImageProcessor:
                 '--oem 3 --psm 8 -l eng',  # Single word
                 '--oem 3 --psm 7 -l eng',  # Single text line
                 '--oem 3 --psm 13 -l eng', # Raw line
+                '--oem 3 --psm 3 -l eng',  # Fully automatic
+                '--oem 3 --psm 4 -l eng',  # Single column
             ]
             
-            best_text = ""
+            best_text = original_text if original_text.strip() else ""
+            
             for config in configs:
                 try:
                     text = pytesseract.image_to_string(processed_image, config=config)
+                    print(f"Config {config}: '{text}'")
                     if len(text.strip()) > len(best_text.strip()):
                         best_text = text
-                except:
+                except Exception as e:
+                    print(f"Config {config} failed: {e}")
                     continue
             
             extracted_text = best_text
             
             # Debug: Print what we extracted
-            print(f"Raw OCR text: '{extracted_text}'")
+            print(f"Best OCR text: '{extracted_text}'")
             
             # Clean up the text
             cleaned_text = self._clean_math_text(extracted_text)
@@ -70,11 +80,29 @@ class ImageProcessor:
             # Debug: Print cleaned text
             print(f"Cleaned text: '{cleaned_text}'")
             
+            # If we still don't have text, try a simple fallback
+            if not cleaned_text.strip():
+                print("No text extracted, trying fallback...")
+                # Try with minimal processing
+                try:
+                    fallback_text = pytesseract.image_to_string(image_path, config='--oem 1 --psm 3')
+                    cleaned_text = self._clean_math_text(fallback_text)
+                    print(f"Fallback text: '{cleaned_text}'")
+                except Exception as e:
+                    print(f"Fallback also failed: {e}")
+            
             return cleaned_text
             
         except Exception as e:
             print(f"Error in text extraction: {e}")
-            return ""
+            # Try one more time with absolute minimal config
+            try:
+                print("Trying minimal config as last resort...")
+                minimal_text = pytesseract.image_to_string(image_path, config='--psm 3')
+                return self._clean_math_text(minimal_text)
+            except Exception as e2:
+                print(f"Minimal config also failed: {e2}")
+                return ""
     
     def _clean_math_text(self, text: str) -> str:
         """Clean and normalize mathematical text"""

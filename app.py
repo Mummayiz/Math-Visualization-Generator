@@ -365,6 +365,41 @@ def clear_history():
     except Exception as e:
         return jsonify({'error': f'Error clearing history: {str(e)}'}), 500
 
+@app.route('/api/test-ocr', methods=['POST'])
+def test_ocr():
+    """Test OCR functionality with uploaded image"""
+    try:
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+        
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        if file and allowed_file(file.filename):
+            # Save the file
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            
+            # Test OCR
+            processor = ImageProcessor()
+            extracted_text = processor.extract_text(filepath)
+            
+            # Clean up
+            os.remove(filepath)
+            
+            return jsonify({
+                'success': True,
+                'extracted_text': extracted_text,
+                'text_length': len(extracted_text.strip())
+            })
+        else:
+            return jsonify({'error': 'Invalid file type'}), 400
+            
+    except Exception as e:
+        return jsonify({'error': f'OCR test failed: {str(e)}'}), 500
+
 if __name__ == '__main__':
     # Ensure directories exist
     Config.ensure_directories()
