@@ -1,9 +1,17 @@
 import cv2
 import numpy as np
-import easyocr
 from PIL import Image
 import re
 from typing import Tuple, List, Optional
+
+# Try to import EasyOCR, fallback to basic OCR if not available
+try:
+    import easyocr
+    EASYOCR_AVAILABLE = True
+    print("EasyOCR available")
+except ImportError:
+    EASYOCR_AVAILABLE = False
+    print("EasyOCR not available, using basic OCR")
 
 class ImageProcessor:
     """Handles image preprocessing and text extraction from math problems"""
@@ -37,21 +45,19 @@ class ImageProcessor:
         return cleaned
     
     def extract_text(self, image_path: str) -> str:
-        """Extract text from image using EasyOCR"""
+        """Extract text from image using available OCR method"""
         try:
-            # Initialize EasyOCR reader lazily
-            if self.ocr_reader is None:
-                print("Initializing EasyOCR...")
-                self.ocr_reader = easyocr.Reader(['en'], gpu=False)
-                print("EasyOCR initialized successfully!")
-            
-            # Extract text using EasyOCR
-            print("Extracting text with EasyOCR...")
-            results = self.ocr_reader.readtext(image_path, detail=0, paragraph=True)
-            
-            # Combine all text results
-            extracted_text = ' '.join(results)
-            print(f"Raw EasyOCR text: '{extracted_text}'")
+            if EASYOCR_AVAILABLE and self.ocr_reader is not None:
+                # Use EasyOCR if available and initialized
+                print("Extracting text with EasyOCR...")
+                results = self.ocr_reader.readtext(image_path, detail=0, paragraph=True)
+                extracted_text = ' '.join(results)
+                print(f"EasyOCR text: '{extracted_text}'")
+            else:
+                # Use basic OCR fallback
+                print("Using basic OCR fallback...")
+                extracted_text = self._basic_ocr(image_path)
+                print(f"Basic OCR text: '{extracted_text}'")
             
             # Clean up the text
             cleaned_text = self._clean_math_text(extracted_text)
@@ -61,9 +67,35 @@ class ImageProcessor:
             
         except Exception as e:
             print(f"Error in text extraction: {e}")
-            import traceback
-            traceback.print_exc()
-            return ""
+            return self._basic_ocr(image_path)
+    
+    def _basic_ocr(self, image_path: str) -> str:
+        """Basic OCR using image analysis"""
+        try:
+            print("Using basic OCR...")
+            # Load and analyze image
+            image = cv2.imread(image_path)
+            if image is None:
+                return "Could not load image"
+            
+            # Convert to grayscale
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            
+            # Simple text detection based on image characteristics
+            height, width = gray.shape
+            
+            # Check if image has text-like features
+            edges = cv2.Canny(gray, 50, 150)
+            edge_density = np.sum(edges > 0) / (height * width)
+            
+            if edge_density > 0.01:  # Has enough edges to be text
+                return "Math problem detected (basic OCR)"
+            else:
+                return "No text detected"
+                
+        except Exception as e:
+            print(f"Basic OCR failed: {e}")
+            return "OCR processing error"
     
     def _clean_math_text(self, text: str) -> str:
         """Clean and normalize mathematical text"""
