@@ -222,7 +222,7 @@
         <div class="header">
             <h1 class="title">🧮 Math Visualization Generator</h1>
             <p class="subtitle">Upload a math problem and get a step-by-step solution!</p>
-            <div class="demo-badge">🚀 DEMO MODE - Railway Optimized</div>
+            <div class="demo-badge">🚀 REAL MODE - OCR & Math Solving</div>
         </div>
         
         <div class="features">
@@ -365,12 +365,20 @@
             document.getElementById('progressContainer').style.display = 'none';
             document.getElementById('resultContainer').style.display = 'block';
             document.getElementById('successMessage').style.display = 'block';
-            document.getElementById('successMessage').textContent = 'Demo processing completed successfully!';
+            document.getElementById('successMessage').textContent = 'Real processing completed successfully!';
             
             if (data.result) {
-                document.getElementById('problemText').textContent = data.result.problem;
-                document.getElementById('solutionText').textContent = data.result.solution;
-                document.getElementById('stepsText').innerHTML = data.result.steps.join('<br>');
+                document.getElementById('problemText').textContent = data.result.problem || 'Math problem detected';
+                document.getElementById('solutionText').textContent = data.result.answer || data.result.solution || 'Solution generated';
+                
+                // Display steps if available
+                if (data.result.steps && Array.isArray(data.result.steps)) {
+                    document.getElementById('stepsText').innerHTML = data.result.steps.join('<br>');
+                } else if (data.result.steps) {
+                    document.getElementById('stepsText').innerHTML = data.result.steps;
+                } else {
+                    document.getElementById('stepsText').innerHTML = 'Steps generated successfully';
+                }
             }
         }
         

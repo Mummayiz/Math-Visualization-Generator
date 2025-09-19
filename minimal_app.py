@@ -11,6 +11,9 @@ import time
 import threading
 from werkzeug.utils import secure_filename
 import json
+from real_ocr import RealOCRProcessor
+from real_math_parser import RealMathParser
+from real_solution_engine import RealSolutionEngine
 
 app = Flask(__name__)
 CORS(app)
@@ -18,6 +21,11 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Progress tracking
 progress_data = {}
+
+# Initialize real components
+ocr_processor = RealOCRProcessor()
+math_parser = RealMathParser()
+solution_engine = RealSolutionEngine()
 
 def allowed_file(filename):
     """Check if file extension is allowed"""
@@ -65,12 +73,12 @@ def upload_image():
             progress_data[task_id] = {
                 'status': 'processing',
                 'progress': 0,
-                'message': 'Starting demo processing...'
+                'message': 'Starting real processing...'
             }
             
             # Process in background thread
             thread = threading.Thread(
-                target=process_image_demo,
+                target=process_image_real,
                 args=(filepath, task_id)
             )
             thread.daemon = True
@@ -79,13 +87,71 @@ def upload_image():
             return jsonify({
                 'success': True,
                 'task_id': task_id,
-                'message': 'Image uploaded successfully. Demo processing started.'
+                'message': 'Image uploaded successfully. Real processing started.'
             })
         else:
             return jsonify({'error': 'Invalid file type. Please upload PNG, JPG, JPEG, GIF, BMP, or TIFF'}), 400
             
     except Exception as e:
         return jsonify({'error': f'Upload failed: {str(e)}'}), 500
+
+def process_image_real(filepath, task_id):
+    """Real processing function with OCR and math solving"""
+    try:
+        # Step 1: Extract text from image
+        progress_data[task_id]['progress'] = 20
+        progress_data[task_id]['message'] = 'Extracting text from image...'
+        
+        extracted_text = ocr_processor.extract_text(filepath)
+        print(f"Extracted text: '{extracted_text}'")
+        
+        if not extracted_text or extracted_text.strip() == "":
+            progress_data[task_id]['status'] = 'error'
+            progress_data[task_id]['message'] = 'Could not extract text from image. Please ensure the image contains clear mathematical text.'
+            return
+        
+        # Step 2: Parse mathematical problem
+        progress_data[task_id]['progress'] = 40
+        progress_data[task_id]['message'] = 'Parsing mathematical problem...'
+        
+        problem_info = math_parser.parse_problem(extracted_text)
+        print(f"Parsed problem: {problem_info}")
+        
+        # Step 3: Generate solution
+        progress_data[task_id]['progress'] = 60
+        progress_data[task_id]['message'] = 'Generating solution...'
+        
+        solution = solution_engine.solve_problem(problem_info)
+        print(f"Generated solution: {solution}")
+        
+        # Step 4: Create result
+        progress_data[task_id]['progress'] = 80
+        progress_data[task_id]['message'] = 'Creating result...'
+        
+        result = {
+            'problem': extracted_text,
+            'problem_info': problem_info,
+            'solution': solution,
+            'answer': solution.get('answer', 'Solution generated'),
+            'steps': solution.get('steps', []),
+            'verification': solution.get('verification', ''),
+            'solution_type': solution.get('solution_type', 'unknown')
+        }
+        
+        # Step 5: Complete
+        progress_data[task_id]['progress'] = 100
+        progress_data[task_id]['message'] = 'Processing completed!'
+        progress_data[task_id]['status'] = 'completed'
+        progress_data[task_id]['result'] = result
+        
+        print(f"Real processing completed: {result}")
+        
+    except Exception as e:
+        progress_data[task_id]['status'] = 'error'
+        progress_data[task_id]['message'] = f'Real processing failed: {str(e)}'
+        print(f"Real processing error: {e}")
+        import traceback
+        traceback.print_exc()
 
 def process_image_demo(filepath, task_id):
     """Demo processing function"""
