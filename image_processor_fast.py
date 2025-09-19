@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import pytesseract
+import easyocr
 from PIL import Image
 import re
 from typing import Tuple, List, Optional
@@ -29,30 +29,25 @@ class FastImageProcessor:
         return thresh
         
     def extract_text_fast(self, image_path: str) -> str:
-        """Fast text extraction using optimized OCR settings"""
+        """Fast text extraction using EasyOCR"""
         try:
-            # Preprocess image
-            processed_image = self.preprocess_image_fast(image_path)
+            # Initialize EasyOCR reader lazily
+            if self.ocr_reader is None:
+                print("Initializing Fast EasyOCR...")
+                self.ocr_reader = easyocr.Reader(['en'], gpu=False)
+                print("Fast EasyOCR initialized successfully!")
             
-            # Try multiple PSM modes for better math text extraction
-            configs = [
-                '--oem 3 --psm 6 -l eng',  # Default
-                '--oem 3 --psm 8 -l eng',  # Single word
-                '--oem 3 --psm 7 -l eng',  # Single text line
-                '--oem 3 --psm 13 -l eng', # Raw line
-            ]
+            # Extract text using EasyOCR
+            print("Fast extracting text with EasyOCR...")
+            results = self.ocr_reader.readtext(image_path, detail=0, paragraph=True)
             
-            best_text = ""
-            for config in configs:
-                try:
-                    text = pytesseract.image_to_string(processed_image, config=config)
-                    if len(text.strip()) > len(best_text.strip()):
-                        best_text = text
-                except:
-                    continue
+            # Combine all text results
+            extracted_text = ' '.join(results)
+            print(f"Fast EasyOCR text: '{extracted_text}'")
             
             # Clean up text
-            cleaned_text = self.clean_text_fast(best_text)
+            cleaned_text = self.clean_text_fast(extracted_text)
+            print(f"Fast cleaned text: '{cleaned_text}'")
             
             return cleaned_text
             
