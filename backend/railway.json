@@ -1,0 +1,18 @@
+{
+  "$schema": "https://docs.railway.app/schemas/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "python api_app.py",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 300,
+    "restartPolicy": {
+      "maxRetries": 10
+    }
+  },
+  "environment": {
+    "FLASK_ENV": "production",
+    "PORT": "8000"
+  }
+}
