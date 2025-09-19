@@ -41,11 +41,34 @@ class ImageProcessor:
             # Preprocess image
             processed_image = self.preprocess_image(image_path)
             
-            # Use Tesseract for OCR (memory efficient)
-            extracted_text = pytesseract.image_to_string(processed_image, config='--oem 3 --psm 6 -l eng')
+            # Use Tesseract for OCR with better math symbol recognition
+            # Try multiple PSM modes for better math text extraction
+            configs = [
+                '--oem 3 --psm 6 -l eng',  # Default
+                '--oem 3 --psm 8 -l eng',  # Single word
+                '--oem 3 --psm 7 -l eng',  # Single text line
+                '--oem 3 --psm 13 -l eng', # Raw line
+            ]
+            
+            best_text = ""
+            for config in configs:
+                try:
+                    text = pytesseract.image_to_string(processed_image, config=config)
+                    if len(text.strip()) > len(best_text.strip()):
+                        best_text = text
+                except:
+                    continue
+            
+            extracted_text = best_text
+            
+            # Debug: Print what we extracted
+            print(f"Raw OCR text: '{extracted_text}'")
             
             # Clean up the text
             cleaned_text = self._clean_math_text(extracted_text)
+            
+            # Debug: Print cleaned text
+            print(f"Cleaned text: '{cleaned_text}'")
             
             return cleaned_text
             
@@ -55,32 +78,50 @@ class ImageProcessor:
     
     def _clean_math_text(self, text: str) -> str:
         """Clean and normalize mathematical text"""
+        if not text or not text.strip():
+            return ""
+            
         # Remove extra whitespace
         text = re.sub(r'\s+', ' ', text.strip())
         
         # Common OCR corrections for math symbols
         corrections = {
-            '0': '0', 'O': '0', 'o': '0',
-            '1': '1', 'l': '1', 'I': '1',
-            '2': '2', 'Z': '2',
-            '5': '5', 'S': '5',
-            '6': '6', 'G': '6',
+            '0': '0', 'O': '0', 'o': '0', 'Q': '0',
+            '1': '1', 'l': '1', 'I': '1', '|': '1',
+            '2': '2', 'Z': '2', 'z': '2',
+            '3': '3', 'B': '3', 'E': '3',
+            '4': '4', 'A': '4',
+            '5': '5', 'S': '5', 's': '5',
+            '6': '6', 'G': '6', 'b': '6',
+            '7': '7', 'T': '7', 't': '7',
             '8': '8', 'B': '8',
-            '+': '+', 't': '+',
+            '9': '9', 'g': '9', 'q': '9',
+            '+': '+', 't': '+', 'T': '+',
+            '-': '-', '_': '-', '—': '-',
             '=': '=', '—': '=', '—': '=',
-            'x': 'x', 'X': 'x',
+            '*': '*', 'x': '*', 'X': '*', '×': '*',
+            '/': '/', '\\': '/', '÷': '/',
+            'x': 'x', 'X': 'x', '×': 'x',
             'y': 'y', 'Y': 'y',
             'z': 'z', 'Z': 'z',
-            '^': '^', '∧': '^',
+            '^': '^', '∧': '^', '**': '^',
             '√': 'sqrt', '√': 'sqrt',
             'π': 'pi', 'π': 'pi',
-            '∞': 'infinity', '∞': 'infinity'
+            '∞': 'infinity', '∞': 'infinity',
+            '(': '(', ')': ')',
+            '[': '[', ']': ']',
+            '{': '{', '}': '}',
+            '.': '.', ',': ',',
+            '?': '?', '!': '!'
         }
         
         for wrong, correct in corrections.items():
             text = text.replace(wrong, correct)
         
-        return text
+        # Remove any remaining non-printable characters except math symbols
+        text = re.sub(r'[^\w\s\+\-\=\*\/\(\)\[\]\{\}\.,;:!?^√π∞]', '', text)
+        
+        return text.strip()
     
     def detect_math_regions(self, image_path: str) -> List[Tuple[int, int, int, int]]:
         """Detect regions in image that likely contain mathematical expressions"""

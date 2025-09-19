@@ -34,25 +34,31 @@ class FastImageProcessor:
             # Preprocess image
             processed_image = self.preprocess_image_fast(image_path)
             
-            # Use pytesseract with fast settings
-            custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-=()[]{}.,;:!? '
-            text = pytesseract.image_to_string(processed_image, config=custom_config)
+            # Try multiple PSM modes for better math text extraction
+            configs = [
+                '--oem 3 --psm 6 -l eng',  # Default
+                '--oem 3 --psm 8 -l eng',  # Single word
+                '--oem 3 --psm 7 -l eng',  # Single text line
+                '--oem 3 --psm 13 -l eng', # Raw line
+            ]
+            
+            best_text = ""
+            for config in configs:
+                try:
+                    text = pytesseract.image_to_string(processed_image, config=config)
+                    if len(text.strip()) > len(best_text.strip()):
+                        best_text = text
+                except:
+                    continue
             
             # Clean up text
-            cleaned_text = self.clean_text_fast(text)
+            cleaned_text = self.clean_text_fast(best_text)
             
             return cleaned_text
             
         except Exception as e:
-            print(f"Fast OCR failed, trying EasyOCR: {e}")
-            # Fallback to EasyOCR with minimal settings
-            try:
-                results = self.ocr_reader.readtext(image_path, detail=0, paragraph=True)
-                text = ' '.join(results)
-                return self.clean_text_fast(text)
-            except Exception as e2:
-                print(f"EasyOCR also failed: {e2}")
-                return ""
+            print(f"Fast OCR failed: {e}")
+            return ""
     
     def clean_text_fast(self, text: str) -> str:
         """Fast text cleaning with minimal operations"""
