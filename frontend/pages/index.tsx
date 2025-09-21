@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import Head from 'next/head';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://your-railway-app.railway.app';
+const API_BASE_URL = 'https://math-vis-backend-production.up.railway.app';
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);

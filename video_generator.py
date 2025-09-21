@@ -11,7 +11,7 @@ import numpy as np
 from config import Config
 
 # Import moviepy for video generation
-from moviepy.editor import *
+from moviepy.editor import VideoFileClip, AudioFileClip, concatenate_audioclips, CompositeVideoClip, VideoClip
 
 # Import text-to-speech
 try:
@@ -34,7 +34,7 @@ class VideoGenerator:
         """Create necessary directories"""
         Config.ensure_directories()
         
-    def _create_audio_clip(self, text: str, duration: float) -> Optional[AudioClip]:
+    def _create_audio_clip(self, text: str, duration: float) -> Optional[AudioFileClip]:
         """Create audio clip from text using text-to-speech"""
         if not self.audio_enabled:
             return None
@@ -54,11 +54,7 @@ class VideoGenerator:
             if audio_clip.duration > duration:
                 # If audio is longer, cut it
                 audio_clip = audio_clip.subclip(0, duration)
-            elif audio_clip.duration < duration:
-                # If audio is shorter, pad with silence
-                silence_duration = duration - audio_clip.duration
-                silence = AudioClip(lambda t: 0, duration=silence_duration)
-                audio_clip = concatenate_audioclips([audio_clip, silence])
+            # Note: We'll skip silence padding for now to avoid complexity
             
             # Set volume
             audio_clip = audio_clip.volumex(self.config.VOICE_VOLUME)

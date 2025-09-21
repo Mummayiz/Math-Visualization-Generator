@@ -41,6 +41,9 @@ class FastVideoGenerator:
         
     def _create_fast_audio_clip(self, text: str, duration: float) -> Optional[AudioClip]:
         """Create audio clip with caching for speed"""
+        # Temporarily disable audio to fix FFMPEG issue
+        return None
+        
         if not self.audio_enabled:
             return None
             
