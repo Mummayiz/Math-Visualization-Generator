@@ -139,18 +139,20 @@ def process_educational_video(file_path, task_id, fast_mode=False):
         print(f"🎬 Solution: {solution}")
         
         try:
+            print(f"🎬 Attempting enhanced video generation for task {task_id}")
             video_filename = enhanced_video_generator.generate_educational_video(problem_info, solution, task_id)
-            print(f"🎬 Enhanced video generation result: {video_filename}")
+            print(f"✅ Enhanced video generation SUCCESS: {video_filename}")
         except Exception as e:
-            print(f"❌ Enhanced video generation failed: {e}")
+            print(f"❌ Enhanced video generation FAILED: {e}")
             import traceback
             traceback.print_exc()
             # Fallback to regular video generator
             try:
+                print(f"🎬 Attempting fallback video generation for task {task_id}")
                 video_filename = video_generator.generate_educational_video(problem_info, solution, task_id)
-                print(f"🎬 Fallback video generation result: {video_filename}")
+                print(f"✅ Fallback video generation SUCCESS: {video_filename}")
             except Exception as e2:
-                print(f"❌ Fallback video generation also failed: {e2}")
+                print(f"❌ Fallback video generation also FAILED: {e2}")
                 video_filename = None
         
         # Update progress

@@ -6,6 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <meta name="version" content="v3.1-debug">
     <meta http-equiv="Last-Modified" content="0">
     <meta http-equiv="ETag" content="0">
     <title>Math Visualization Generator v2.0</title>
@@ -757,10 +758,12 @@
         }
 
         function uploadFile(file) {
+            console.log('🔍 Debug: Starting file upload with file:', file);
             const formData = new FormData();
-            formData.append('image', file);
+            formData.append('file', file);
             formData.append('fast_mode', fastMode);  // Add speed mode
 
+            console.log('🔍 Debug: FormData created, sending request...');
             showLoading();
             hideResult();
 
@@ -768,9 +771,17 @@
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('🔍 Debug: Response status:', response.status);
+                console.log('🔍 Debug: Response headers:', response.headers);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
-                if (data.success && data.task_id) {
+                console.log('🔍 Debug: Response data:', data);
+                if (data.task_id) {
                     // Start polling for progress
                     pollProgress(data.task_id);
                 } else {

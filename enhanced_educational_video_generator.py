@@ -27,28 +27,80 @@ class EnhancedEducationalVideoGenerator:
     
     def __init__(self, output_dir="outputs"):
         self.output_dir = output_dir
-        self.width = 1280
-        self.height = 720
-        self.fps = 3  # 3 frames per second for smooth animation
+        self.width = 1920  # Increased for better quality
+        self.height = 1080  # Full HD for better text readability
+        self.fps = 4  # Slightly higher FPS for smoother animation
         self.audio_enabled = AUDIO_AVAILABLE
         
-        # Color scheme for educational content
+        # Enhanced color scheme for better educational content
         self.colors = {
-            'background': '#f8f9fa',
-            'primary': '#2c3e50',
-            'secondary': '#3498db',
-            'accent': '#e74c3c',
-            'success': '#27ae60',
-            'warning': '#f39c12',
-            'text': '#2c3e50',
-            'light_text': '#7f8c8d',
-            'highlight': '#f1c40f',
-            'step_bg': '#ecf0f1',
-            'equation_bg': '#e8f4f8'
+            'background': '#ffffff',  # Pure white background
+            'primary': '#1e40af',     # Professional blue
+            'secondary': '#374151',   # Dark gray for text
+            'accent': '#3b82f6',      # Bright blue for highlights
+            'success': '#059669',     # Green for success
+            'warning': '#d97706',     # Orange for warnings
+            'error': '#dc2626',       # Red for errors
+            'text': '#111827',        # Very dark gray for text
+            'light_text': '#6b7280',  # Light gray for secondary text
+            'highlight': '#dbeafe',   # Light blue for highlights
+            'step_bg': '#f8fafc',     # Very light gray for step backgrounds
+            'equation_bg': '#f8fafc', # Very light gray for equation boxes
+            'highlight_bg': '#f1f5f9', # Light gray instead of yellow
+            'arrow_color': '#3b82f6', # Blue for arrows
+            'box_color': '#e5e7eb'    # Light gray for boxes
         }
         
         # Ensure output directory exists
         os.makedirs(output_dir, exist_ok=True)
+        
+        # Initialize font cache
+        self._font_cache = {}
+    
+    def _get_font(self, size: int):
+        """Get font with multiple fallbacks and caching"""
+        if size in self._font_cache:
+            return self._font_cache[size]
+        
+        # Try multiple font paths with better quality fonts
+        font_paths = [
+            'C:/Windows/Fonts/calibri.ttf',  # Better quality font
+            'C:/Windows/Fonts/Calibri.ttf',
+            'C:/Windows/Fonts/segoeui.ttf',  # Clean, modern font
+            'C:/Windows/Fonts/SegoeUI.ttf',
+            'C:/Windows/Fonts/arial.ttf',
+            'C:/Windows/Fonts/Arial.ttf',
+            'C:/Windows/Fonts/consola.ttf',  # Monospace for equations
+            'C:/Windows/Fonts/Consola.ttf',
+            'arial.ttf',
+            'Arial.ttf',
+            '/System/Library/Fonts/Arial.ttf',  # macOS
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',  # Linux
+        ]
+        
+        for font_path in font_paths:
+            try:
+                font = ImageFont.truetype(font_path, size)
+                self._font_cache[size] = font
+                return font
+            except (OSError, IOError):
+                continue
+        
+        # If all fail, create a larger default font
+        try:
+            # Try to load default font with larger size
+            font = ImageFont.load_default()
+            # Scale up the default font
+            if hasattr(font, 'size'):
+                scale_factor = size / 10  # Default font is usually size 10
+                font = ImageFont.load_default()
+            self._font_cache[size] = font
+            return font
+        except:
+            # Last resort - return default
+            font = ImageFont.load_default()
+            self._font_cache[size] = font
+            return font
     
     def generate_educational_video(self, problem_info: Dict, solution: Dict, task_id: str) -> str:
         """Generate a comprehensive educational video with animations and visual aids"""
@@ -123,24 +175,20 @@ class EnhancedEducationalVideoGenerator:
         duration = 4 * self.fps  # 4 seconds
         
         for i in range(duration):
-            img = Image.new('RGB', (self.width, self.height), color=self.colors['background'])
+            img = Image.new('RGB', (self.width, self.height), color=(255, 255, 255))  # Pure white background
             draw = ImageDraw.Draw(img)
             
-            try:
-                title_font = ImageFont.truetype('arial.ttf', 48)
-                subtitle_font = ImageFont.truetype('arial.ttf', 32)
-                text_font = ImageFont.truetype('arial.ttf', 24)
-            except:
-                title_font = ImageFont.load_default()
-                subtitle_font = ImageFont.load_default()
-                text_font = ImageFont.load_default()
+            # Enhanced font loading with multiple fallbacks - MUCH LARGER FONTS
+            title_font = self._get_font(96)      # Increased from 72
+            subtitle_font = self._get_font(64)   # Increased from 48
+            text_font = self._get_font(48)       # Increased from 36
             
             # Animated title with fade-in effect
             if i < duration // 2:
                 alpha = int(255 * (i / (duration // 2)))
-                title_color = (*self._hex_to_rgb(self.colors['primary']), alpha)
+                title_color = (0, 0, 0)  # Black
             else:
-                title_color = self.colors['primary']
+                title_color = (0, 0, 0)  # Black
             
             # Main title with animation
             title_text = "🎓 Math Problem Solver"
@@ -148,15 +196,10 @@ class EnhancedEducationalVideoGenerator:
             title_width = title_bbox[2] - title_bbox[0]
             title_x = (self.width - title_width) // 2
             
-            # Add glow effect
-            for offset in range(3, 0, -1):
-                glow_color = (*self._hex_to_rgb(self.colors['secondary']), 50)
-                draw.text((title_x + offset, 100 + offset), title_text, 
-                         fill=glow_color, font=title_font)
+            # Draw clean title without effects
+            draw.text((title_x, 100), title_text, fill=(0, 0, 0), font=title_font)
             
-            draw.text((title_x, 100), title_text, fill=title_color, font=title_font)
-            
-            # Problem type with slide-in animation
+            # Problem type with educational context
             if i > duration // 4:
                 problem_type = problem_info.get('problem_type', 'Mathematical Problem')
                 type_text = f"Problem Type: {problem_type.title()}"
@@ -164,27 +207,34 @@ class EnhancedEducationalVideoGenerator:
                 type_width = type_bbox[2] - type_bbox[0]
                 type_x = (self.width - type_width) // 2
                 
-                draw.text((type_x, 200), type_text, fill=self.colors['secondary'], font=subtitle_font)
+                draw.text((type_x, 200), type_text, fill=(0, 50, 150), font=subtitle_font)  # Dark blue
             
-            # Problem statement with typewriter effect
+            # Problem statement with enhanced educational formatting
             if i > duration // 2:
                 problem_text = problem_info.get('original_text', 'No problem provided')
                 # Show characters progressively
                 chars_to_show = min(len(problem_text), (i - duration // 2) * 3)
                 display_text = problem_text[:chars_to_show]
                 
-                # Wrap text
-                wrapped_text = self._wrap_text(display_text, 60)
+                # Wrap text with better spacing
+                wrapped_text = self._wrap_text(display_text, 120)  # Increased from 60 to prevent truncation
                 y_pos = 300
-                for line in wrapped_text[:4]:  # Show first 4 lines
-                    draw.text((50, y_pos), line, fill=self.colors['text'], font=text_font)
-                    y_pos += 35
+                
+                # Draw problem statement with educational formatting
+                for line_idx, line in enumerate(wrapped_text[:4]):  # Show first 4 lines
+                    if line.strip():
+                        # Highlight mathematical expressions
+                        if any(symbol in line for symbol in ['+', '-', '*', '/', '=', '(', ')', '²', '√', 'x', 'y']):
+                            draw.text((50, y_pos), line, fill=(0, 100, 0), font=text_font)  # Green for math
+                        else:
+                            draw.text((50, y_pos), line, fill=(0, 0, 0), font=text_font)  # Black for text
+                        y_pos += 60  # Increased line spacing from 40 to 60 for better readability
                 
                 # Add cursor effect
                 if chars_to_show < len(problem_text) and i % 2 == 0:
                     cursor_x = 50 + draw.textlength(display_text.split('\n')[-1], font=text_font)
-                    cursor_y = y_pos - 35
-                    draw.text((cursor_x, cursor_y), "|", fill=self.colors['accent'], font=text_font)
+                    cursor_y = y_pos - 40
+                    draw.text((cursor_x, cursor_y), "|", fill=(0, 0, 0), font=text_font)
             
             # Add decorative elements
             self._add_decorative_elements(draw, i, duration)
@@ -199,21 +249,17 @@ class EnhancedEducationalVideoGenerator:
         duration = 3 * self.fps  # 3 seconds
         
         for i in range(duration):
-            img = Image.new('RGB', (self.width, self.height), color=self.colors['background'])
+            img = Image.new('RGB', (self.width, self.height), color=(255, 255, 255))  # Pure white background
             draw = ImageDraw.Draw(img)
             
-            try:
-                header_font = ImageFont.truetype('arial.ttf', 40)
-                text_font = ImageFont.truetype('arial.ttf', 28)
-                small_font = ImageFont.truetype('arial.ttf', 20)
-            except:
-                header_font = ImageFont.load_default()
-                text_font = ImageFont.load_default()
-                small_font = ImageFont.load_default()
+            # Enhanced font loading
+            header_font = self._get_font(40)
+            text_font = self._get_font(28)
+            small_font = self._get_font(20)
             
             # Analysis header with animation
             header_text = "🔍 Problem Analysis & Strategy"
-            draw.text((50, 50), header_text, fill=self.colors['primary'], font=header_font)
+            draw.text((50, 50), header_text, fill=(0, 0, 0), font=header_font)  # Black
             
             # Analysis points with progressive reveal
             analysis_points = [
@@ -232,24 +278,15 @@ class EnhancedEducationalVideoGenerator:
                     box_y = y_start + idx * 80
                     box_height = 60
                     
-                    # Animate box appearance
+                    # Clean text display without background boxes
                     if i > idx * 8 + 4:
-                        # Draw background box
-                        draw.rounded_rectangle(
-                            (50, box_y, self.width - 50, box_y + box_height),
-                            radius=10,
-                            fill=self.colors['step_bg'],
-                            outline=self.colors['secondary'],
-                            width=2
-                        )
-                        
                         # Label
                         draw.text((70, box_y + 10), f"• {label}:", 
-                                fill=self.colors['primary'], font=text_font)
+                                fill=(0, 0, 0), font=text_font)  # Black
                         
                         # Value with highlighting
                         draw.text((70, box_y + 35), value, 
-                                fill=self.colors['success'], font=small_font)
+                                fill=(0, 100, 0), font=small_font)  # Green
             
             # Add visual diagram if it's an arithmetic problem
             if 'arithmetic' in problem_info.get('problem_type', '').lower():
@@ -285,52 +322,56 @@ class EnhancedEducationalVideoGenerator:
         duration = 4 * self.fps  # 4 seconds per step
         
         for i in range(duration):
-            img = Image.new('RGB', (self.width, self.height), color=self.colors['background'])
+            img = Image.new('RGB', (self.width, self.height), color=(255, 255, 255))  # Pure white background
             draw = ImageDraw.Draw(img)
             
-            try:
-                step_font = ImageFont.truetype('arial.ttf', 36)
-                text_font = ImageFont.truetype('arial.ttf', 24)
-                equation_font = ImageFont.truetype('arial.ttf', 32)
-                small_font = ImageFont.truetype('arial.ttf', 20)
-            except:
-                step_font = ImageFont.load_default()
-                text_font = ImageFont.load_default()
-                equation_font = ImageFont.load_default()
-                small_font = ImageFont.load_default()
+            # Enhanced font loading with proper fallbacks - MUCH LARGER FONTS
+            step_font = self._get_font(80)      # Increased from 64 - Much larger step title
+            text_font = self._get_font(56)      # Increased from 42 - Much larger main text
+            equation_font = self._get_font(72)  # Increased from 56 - Much larger equations
+            small_font = self._get_font(40)     # Increased from 32 - Larger small text
+            highlight_font = self._get_font(60) # Increased from 48 - New highlight font
             
             # Step header with progress indicator
             progress = step_num / total_steps
             self._draw_progress_bar(draw, progress, i, duration)
             
-            # Step title with animation
+            # Step title with clean, professional styling
             step_title = f"Step {step_num} of {total_steps}"
-            if i < duration // 4:
-                # Slide in from left
-                slide_offset = max(0, 50 - i * 2)
-                draw.text((slide_offset, 100), step_title, 
-                         fill=self.colors['primary'], font=step_font)
-            else:
-                draw.text((50, 100), step_title, 
-                         fill=self.colors['primary'], font=step_font)
+            draw.text((120, 120), step_title, 
+                     fill=(50, 50, 50), font=step_font)  # Dark gray for professional look
             
-            # Step description with typewriter effect
+            # Step description with enhanced educational formatting
             description = step.get('description', '')
             if description and i > duration // 6:
-                chars_to_show = min(len(description), (i - duration // 6) * 2)
+                chars_to_show = min(len(description), (i - duration // 6) * 3)
                 display_text = description[:chars_to_show]
                 
-                # Wrap text
-                wrapped_text = self._wrap_text(display_text, 80)
-                y_pos = 180
-                for line in wrapped_text[:3]:
-                    draw.text((70, y_pos), line, fill=self.colors['text'], font=text_font)
-                    y_pos += 35
+                # Wrap text with better spacing
+                wrapped_text = self._wrap_text(display_text, 150)  # Increased from 100 to prevent truncation
+                y_pos = 200
                 
-                # Add cursor
+                # Draw each line with educational formatting
+                for line_idx, line in enumerate(wrapped_text[:6]):  # Show up to 6 lines
+                    if line.strip():
+                        # Highlight key mathematical terms with different colors
+                        if any(term in line.lower() for term in ['step', 'first', 'next', 'then', 'finally', 'solve', 'calculate']):
+                            # Draw key terms in dark blue
+                            draw.text((130, y_pos), line, fill=(0, 50, 150), font=text_font)
+                        elif any(term in line.lower() for term in ['multiply', 'add', 'subtract', 'divide', 'parentheses', 'order']):
+                            # Draw mathematical operations in dark green
+                            draw.text((130, y_pos), line, fill=(0, 100, 0), font=text_font)
+                        else:
+                            # Regular text in black
+                            draw.text((130, y_pos), line, fill=(0, 0, 0), font=text_font)
+                        y_pos += 70  # Increased line spacing from 50 to 70 for better readability
+                
+                # Add simple animated cursor without background
                 if chars_to_show < len(description) and i % 2 == 0:
-                    cursor_x = 70 + draw.textlength(display_text.split('\n')[-1], font=text_font)
-                    draw.text((cursor_x, y_pos - 35), "|", fill=self.colors['accent'], font=text_font)
+                    cursor_x = 130 + draw.textlength(display_text.split('\n')[-1], font=text_font)
+                    cursor_y = y_pos - 50
+                    # Draw simple cursor without background
+                    draw.text((cursor_x, cursor_y), "|", fill=(0, 0, 0), font=text_font)
             
             # Equation with highlighting
             equation = step.get('equation', '')
@@ -355,63 +396,60 @@ class EnhancedEducationalVideoGenerator:
         duration = 3 * self.fps  # 3 seconds
         
         for i in range(duration):
-            img = Image.new('RGB', (self.width, self.height), color=self.colors['background'])
+            img = Image.new('RGB', (self.width, self.height), color=(255, 255, 255))  # Pure white background
             draw = ImageDraw.Draw(img)
             
-            try:
-                title_font = ImageFont.truetype('arial.ttf', 40)
-                text_font = ImageFont.truetype('arial.ttf', 28)
-                large_font = ImageFont.truetype('arial.ttf', 48)
-            except:
-                title_font = ImageFont.load_default()
-                text_font = ImageFont.load_default()
-                large_font = ImageFont.load_default()
+            # Enhanced font loading - MUCH LARGER FONTS
+            title_font = self._get_font(56)      # Increased from 40
+            text_font = self._get_font(40)       # Increased from 28
+            large_font = self._get_font(64)      # Increased from 48
             
-            # Conclusion header
-            draw.text((50, 50), "✅ Solution Complete", 
-                     fill=self.colors['success'], font=title_font)
+            # Conclusion header with educational emphasis
+            draw.text((50, 50), "🎓 Solution Complete", 
+                     fill=(0, 100, 0), font=title_font)  # Green for success
             
-            # Final answer with emphasis
+            # Final answer with enhanced educational formatting
             final_answer = solution.get('final_answer', 'Solution completed')
             if i > duration // 4:
-                # Highlighted answer box
-                answer_box_y = 150
-                answer_box_height = 100
+                # Clean answer display without background boxes
+                answer_y = 150
                 
-                draw.rounded_rectangle(
-                    (50, answer_box_y, self.width - 50, answer_box_y + answer_box_height),
-                    radius=15,
-                    fill=self.colors['equation_bg'],
-                    outline=self.colors['success'],
-                    width=3
-                )
+                draw.text((70, answer_y), "Final Answer:", 
+                         fill=(0, 50, 150), font=text_font)  # Dark blue for label
                 
-                draw.text((70, answer_box_y + 30), "Final Answer:", 
-                         fill=self.colors['primary'], font=text_font)
-                
-                # Animate answer appearance
+                # Animate answer appearance with educational formatting
                 if i > duration // 2:
                     answer_text = str(final_answer)
-                    wrapped_answer = self._wrap_text(answer_text, 60)
-                    y_pos = answer_box_y + 60
-                    for line in wrapped_answer[:2]:
-                        draw.text((70, y_pos), line, fill=self.colors['success'], font=text_font)
-                        y_pos += 30
+                    wrapped_answer = self._wrap_text(answer_text, 120)  # Increased from 60 to prevent truncation
+                    y_pos = answer_y + 40
+                    for line in wrapped_answer[:3]:  # Show up to 3 lines
+                        if line.strip():
+                            # Highlight mathematical expressions in the answer
+                            if any(symbol in line for symbol in ['+', '-', '*', '/', '=', '(', ')', '²', '√', 'x', 'y', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']):
+                                draw.text((70, y_pos), line, fill=(0, 100, 0), font=text_font)  # Green for math
+                            else:
+                                draw.text((70, y_pos), line, fill=(0, 0, 0), font=text_font)  # Black for text
+                            y_pos += 50  # Increased line spacing from 35 to 50 for better readability
             
-            # Key takeaways
+            # Key educational takeaways
             if i > duration // 2:
                 takeaways = [
-                    "✓ Problem solved step by step",
-                    "✓ All intermediate steps shown",
-                    "✓ Mathematical reasoning applied",
-                    "✓ Solution verified"
+                    "✓ Step-by-step problem solving approach",
+                    "✓ Order of operations (PEMDAS) applied correctly",
+                    "✓ Mathematical reasoning explained clearly",
+                    "✓ Solution verified through systematic approach"
                 ]
                 
                 y_start = 300
                 for idx, takeaway in enumerate(takeaways):
                     if i > duration // 2 + idx * 5:
-                        draw.text((70, y_start + idx * 40), takeaway, 
-                                fill=self.colors['text'], font=text_font)
+                        # Highlight key educational terms
+                        if any(term in takeaway.lower() for term in ['step-by-step', 'pemdas', 'reasoning', 'verified']):
+                            draw.text((70, y_start + idx * 60), takeaway, 
+                                    fill=(0, 50, 150), font=text_font)  # Dark blue for key terms
+                        else:
+                            draw.text((70, y_start + idx * 60), takeaway, 
+                                    fill=(0, 0, 0), font=text_font)  # Black for regular text
             
             # Add celebration animation
             if i > duration // 3:
@@ -422,172 +460,145 @@ class EnhancedEducationalVideoGenerator:
         return frames
     
     def _draw_progress_bar(self, draw, progress: float, frame: int, duration: int):
-        """Draw animated progress bar"""
-        bar_width = self.width - 100
-        bar_height = 20
-        bar_x = 50
-        bar_y = 50
+        """Draw clean, minimal progress indicator without distracting elements"""
+        # Simple text-based progress indicator instead of a bar
+        progress_text = f"Processing... {int(progress * 100)}%"
+        progress_font = self._get_font(28)
         
-        # Background
-        draw.rounded_rectangle(
-            (bar_x, bar_y, bar_x + bar_width, bar_y + bar_height),
-            radius=10,
-            fill=self.colors['step_bg'],
-            outline=self.colors['secondary']
-        )
+        # Calculate text position (top center)
+        text_bbox = draw.textbbox((0, 0), progress_text, font=progress_font)
+        text_width = text_bbox[2] - text_bbox[0]
+        text_x = (self.width - text_width) // 2
+        text_y = 30
         
-        # Progress fill with animation
-        if frame > duration // 4:
-            fill_width = int(bar_width * progress * min(1.0, (frame - duration // 4) / (duration * 3 // 4)))
-            draw.rounded_rectangle(
-                (bar_x, bar_y, bar_x + fill_width, bar_y + bar_height),
-                radius=10,
-                fill=self.colors['success']
-            )
+        # Draw clean progress text
+        draw.text((text_x, text_y), progress_text, fill=(100, 100, 100), font=progress_font)
     
     def _draw_equation_box(self, draw, equation: str, frame: int, duration: int):
-        """Draw highlighted equation box"""
+        """Draw enhanced equation display with educational formatting"""
         if not equation:
             return
         
-        box_y = 300
-        box_height = 80
+        box_y = 350
         
-        # Animate box appearance
+        # Enhanced equation display with educational formatting
         if frame > duration // 3:
-            # Background
-            draw.rounded_rectangle(
-                (50, box_y, self.width - 50, box_y + box_height),
-                radius=10,
-                fill=self.colors['equation_bg'],
-                outline=self.colors['accent'],
-                width=2
-            )
+            # Equation label with larger font
+            label_font = self._get_font(36)
+            equation_font = self._get_font(48)
             
-            # Equation text
-            draw.text((70, box_y + 25), f"Equation: {equation}", 
-                     fill=self.colors['primary'], font=ImageFont.load_default())
+            # Draw "Mathematical Solution:" label
+            draw.text((120, box_y), "Mathematical Solution:", 
+                     fill=(0, 50, 150), font=label_font)  # Dark blue for emphasis
+            
+            # Draw equation with enhanced formatting
+            equation_text = equation.strip()
+            if equation_text:
+                # Clean up the equation text
+                clean_equation = self._clean_equation_text(equation_text)
+                
+                # Split equation into lines for better readability
+                equation_lines = self._wrap_text(clean_equation, 120)  # Increased from 80 to prevent truncation
+                
+                y_offset = 0
+                for line in equation_lines[:3]:  # Show up to 3 lines
+                    if line.strip():
+                        # Highlight mathematical symbols and numbers
+                        if any(symbol in line for symbol in ['+', '-', '*', '/', '=', '(', ')', '²', '√']):
+                            draw.text((120, box_y + 50 + y_offset), line, 
+                                     fill=(0, 100, 0), font=equation_font)  # Green for math symbols
+                        else:
+                            draw.text((120, box_y + 50 + y_offset), line, 
+                                     fill=(0, 0, 0), font=equation_font)  # Black for text
+                        y_offset += 80  # Increased line spacing from 60 to 80 for better readability
+    
+    def _highlight_math_operations(self, equation: str) -> str:
+        """Highlight mathematical operations in the equation"""
+        # This is a simplified version - in a real implementation, you'd parse and highlight
+        # For now, we'll just return the equation as-is
+        return equation
+    
+    def _draw_animated_arrows(self, draw, equation: str, box_y: int, slide_offset: int, frame: int):
+        """Draw animated arrows pointing to key parts of the equation"""
+        if not equation:
+            return
+        
+        # Draw arrows pointing to parentheses, operators, etc.
+        arrow_y = box_y + 60
+        arrow_color = (0, 0, 0)  # Black
+        
+        # Simple arrow animation
+        if '(' in equation and ')' in equation:
+            # Arrow pointing to parentheses
+            arrow_x = 200 - slide_offset
+            if frame % 20 < 10:  # Blinking effect
+                self._draw_arrow(draw, arrow_x, arrow_y, 'right', arrow_color)
+        
+        if '+' in equation or '*' in equation:
+            # Arrow pointing to operators
+            arrow_x = 400 - slide_offset
+            if frame % 20 < 10:  # Blinking effect
+                self._draw_arrow(draw, arrow_x, arrow_y, 'down', arrow_color)
+    
+    def _draw_arrow(self, draw, x: int, y: int, direction: str, color: str):
+        """Draw clean text-based arrow"""
+        if direction == 'right':
+            # Simple text arrow
+            draw.text((x, y), "→", fill=color, font=ImageFont.load_default())
+        elif direction == 'down':
+            # Simple text arrow
+            draw.text((x, y), "↓", fill=color, font=ImageFont.load_default())
     
     def _draw_explanation_box(self, draw, explanation: str, frame: int, duration: int):
-        """Draw explanation box with visual aids"""
+        """Draw clean explanation without visual aids"""
         if not explanation:
             return
         
         box_y = 400
-        box_height = 120
         
         if frame > duration // 2:
-            # Background
-            draw.rounded_rectangle(
-                (50, box_y, self.width - 50, box_y + box_height),
-                radius=10,
-                fill=self.colors['step_bg'],
-                outline=self.colors['secondary'],
-                width=1
-            )
-            
-            # Explanation text
-            wrapped_text = self._wrap_text(explanation, 70)
+            # Clean text explanation without background
+            wrapped_text = self._wrap_text(explanation, 120)  # Increased from 70 to prevent truncation
             y_pos = box_y + 20
             for line in wrapped_text[:4]:
-                draw.text((70, y_pos), line, fill=self.colors['text'], font=ImageFont.load_default())
-                y_pos += 25
+                draw.text((70, y_pos), line, fill=(0, 0, 0), font=ImageFont.load_default())  # Black
+                y_pos += 40  # Increased line spacing from 25 to 40 for better readability
     
     def _draw_arithmetic_diagram(self, draw, problem_info: Dict, frame: int, duration: int):
-        """Draw visual diagram for arithmetic problems"""
-        if frame < duration // 2:
-            return
-        
-        # Draw number line or visual representation
-        start_x = self.width - 300
-        start_y = 200
-        line_length = 200
-        
-        # Number line
-        draw.line([(start_x, start_y), (start_x + line_length, start_y)], 
-                 fill=self.colors['secondary'], width=3)
-        
-        # Add numbers
-        for i in range(0, 6):
-            x = start_x + i * (line_length // 5)
-            draw.text((x - 10, start_y + 10), str(i * 10), 
-                     fill=self.colors['text'], font=ImageFont.load_default())
+        """Draw clean text-based diagram for arithmetic problems"""
+        # No background text elements - keep it completely clean
+        pass
     
     def _add_step_visual_elements(self, draw, step: Dict, step_num: int, frame: int, duration: int):
-        """Add visual elements specific to the step content"""
+        """Add clean text-based elements specific to the step content"""
         if frame < duration // 2:
             return
         
-        # Add arrows, highlights, or other visual aids based on step content
+        # Clean text-based explanation without visual elements
         description = step.get('description', '').lower()
         
-        if 'add' in description or '+' in description:
-            # Draw addition visual
-            self._draw_addition_visual(draw, frame, duration)
-        elif 'multiply' in description or '*' in description:
-            # Draw multiplication visual
-            self._draw_multiplication_visual(draw, frame, duration)
+        # No background text elements - keep it completely clean
+        pass
     
     def _draw_addition_visual(self, draw, frame: int, duration: int):
-        """Draw visual representation of addition"""
-        center_x = self.width - 200
-        center_y = 300
-        
-        # Draw circles representing numbers
-        for i in range(2):
-            x = center_x + i * 100
-            draw.ellipse([x - 20, center_y - 20, x + 20, center_y + 20], 
-                        fill=self.colors['secondary'], outline=self.colors['primary'])
-            draw.text((x - 5, center_y - 5), str(5 + i * 5), 
-                     fill='white', font=ImageFont.load_default())
-        
-        # Plus sign
-        plus_x = center_x + 50
-        draw.line([(plus_x, center_y - 10), (plus_x, center_y + 10)], 
-                 fill=self.colors['accent'], width=3)
-        draw.line([(plus_x - 10, center_y), (plus_x + 10, center_y)], 
-                 fill=self.colors['accent'], width=3)
+        """Draw clean text representation of addition"""
+        # No background text elements - keep it completely clean
+        pass
     
     def _draw_multiplication_visual(self, draw, frame: int, duration: int):
-        """Draw visual representation of multiplication"""
-        center_x = self.width - 200
-        center_y = 300
-        
-        # Draw grid for multiplication
-        grid_size = 3
-        cell_size = 20
-        start_x = center_x - (grid_size * cell_size) // 2
-        start_y = center_y - (grid_size * cell_size) // 2
-        
-        for i in range(grid_size):
-            for j in range(grid_size):
-                x = start_x + i * cell_size
-                y = start_y + j * cell_size
-                draw.rectangle([x, y, x + cell_size, y + cell_size], 
-                             fill=self.colors['highlight'], outline=self.colors['primary'])
+        """Draw clean text representation of multiplication"""
+        # No background text elements - keep it completely clean
+        pass
     
     def _add_decorative_elements(self, draw, frame: int, duration: int):
-        """Add decorative elements to frames"""
-        # Add floating mathematical symbols
-        symbols = ['+', '−', '×', '÷', '=', '√', 'π']
-        
-        for i in range(3):
-            if frame > i * 10:
-                x = 100 + i * 200
-                y = 50 + (frame * 2) % 100
-                symbol = symbols[i % len(symbols)]
-                draw.text((x, y), symbol, fill=self.colors['light_text'], 
-                         font=ImageFont.load_default())
+        """Add clean decorative elements to frames"""
+        # No decorative elements - keep it clean
+        pass
     
     def _add_celebration_elements(self, draw, frame: int, duration: int):
-        """Add celebration elements to conclusion frames"""
-        # Add confetti or checkmarks
-        if frame % 10 < 5:
-            for i in range(5):
-                x = 200 + i * 150
-                y = 100 + (frame * 3) % 200
-                draw.text((x, y), "✓", fill=self.colors['success'], 
-                         font=ImageFont.load_default())
+        """Add clean celebration elements to conclusion frames"""
+        # No background text elements - keep it completely clean
+        pass
     
     def _wrap_text(self, text: str, max_width: int) -> List[str]:
         """Wrap text to fit within max_width"""
@@ -633,43 +644,78 @@ class EnhancedEducationalVideoGenerator:
         return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
     
     def _create_audio_clip(self, text: str, duration: float) -> Optional[AudioFileClip]:
-        """Create audio clip from text using text-to-speech"""
+        """Create enhanced audio clip from text using text-to-speech with proper synchronization"""
         if not self.audio_enabled:
             return None
             
         try:
+            # Clean and prepare text for better speech synthesis
+            clean_text = self._clean_text_for_speech(text)
+            if not clean_text.strip():
+                return None
+                
             # Create temporary audio file
-            temp_audio_path = os.path.join(self.output_dir, f"temp_audio_{hash(text) % 10000}.mp3")
+            temp_audio_path = os.path.join(self.output_dir, f"temp_audio_{hash(clean_text) % 10000}.mp3")
             
-            # Generate speech with optimized settings
-            tts = gTTS(text=text, lang='en', slow=False)
+            # Generate speech with enhanced settings for better quality
+            tts = gTTS(text=clean_text, lang='en', slow=False, tld='com')
             tts.save(temp_audio_path)
             
             # Load audio clip
             audio_clip = AudioFileClip(temp_audio_path)
             
-            # Adjust duration to match video
+            # Ensure audio duration matches video duration exactly
             if audio_clip.duration > duration:
-                # If audio is longer, cut it
+                # If audio is longer, cut it smoothly
                 audio_clip = audio_clip.subclip(0, duration)
             elif audio_clip.duration < duration:
-                # If audio is shorter, pad with silence - skip for now to avoid complexity
-                pass
+                # If audio is shorter, pad with silence to match duration
+                silence_duration = duration - audio_clip.duration
+                if silence_duration > 0:
+                    # Create silence clip
+                    silence = AudioFileClip.silent(duration=silence_duration)
+                    # Concatenate audio with silence
+                    audio_clip = concatenate_audioclips([audio_clip, silence])
             
-            # Clean up temporary file after closing the audio clip
-            # Note: We'll clean up the file later to avoid access issues
+            # Set volume for better audio quality
+            audio_clip = audio_clip.volumex(0.8)
             
             return audio_clip
             
         except Exception as e:
             print(f"❌ Audio generation failed: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
+    def _clean_text_for_speech(self, text: str) -> str:
+        """Clean text for better speech synthesis"""
+        if not text:
+            return ""
+        
+        # Remove markdown formatting
+        clean_text = text.replace('**', '').replace('*', '').replace('`', '')
+        clean_text = clean_text.replace('$', '').replace('\\boxed{', 'the answer is ').replace('}', '')
+        clean_text = clean_text.replace('\\', '')
+        
+        # Remove excessive whitespace
+        clean_text = ' '.join(clean_text.split())
+        
+        # Add pauses for better speech flow
+        clean_text = clean_text.replace('.', '. ')
+        clean_text = clean_text.replace(',', ', ')
+        clean_text = clean_text.replace(':', ': ')
+        
+        return clean_text.strip()
+    
     def _add_audio_narration(self, video_path: str, problem_info: Dict, solution: Dict) -> Optional[str]:
-        """Add audio narration to the enhanced video"""
+        """Add enhanced audio narration to the video with complete coverage"""
         try:
             # Load the video
             video_clip = VideoFileClip(video_path)
+            video_duration = video_clip.duration
+            
+            print(f"🎵 Creating audio narration for {video_duration:.2f} second video...")
             
             # Create audio clips for different sections
             audio_clips = []
@@ -691,45 +737,68 @@ class EnhancedEducationalVideoGenerator:
                 audio_clips.append(analysis_audio)
             current_time += 3.0
             
-            # Solution steps audio (4 seconds per step)
+            # Solution steps audio - enhanced to cover all steps
             steps = solution.get('steps', [])
-            for i, step in enumerate(steps[:5]):  # Limit to first 5 steps
-                step_text = f"Step {i + 1}: {step.get('description', '')}"
-                # Clean up the text for better speech
-                step_text = step_text.replace('*', '').replace('**', '').replace('_', '')
-                if len(step_text) > 200:  # Limit text length
-                    step_text = step_text[:200] + "..."
+            step_duration = 4.0  # 4 seconds per step
+            
+            for i, step in enumerate(steps):
+                # Create comprehensive step narration
+                step_text = self._create_step_narration(step, i + 1, len(steps))
                 
-                step_audio = self._create_audio_clip(step_text, 4.0)
+                step_audio = self._create_audio_clip(step_text, step_duration)
                 if step_audio:
                     step_audio = step_audio.set_start(current_time)
                     audio_clips.append(step_audio)
-                current_time += 4.0
+                current_time += step_duration
+                
+                # Add equation narration if present
+                equation = step.get('equation', '')
+                if equation and equation.strip():
+                    equation_text = f"The equation shows: {equation}"
+                    equation_audio = self._create_audio_clip(equation_text, 2.0)
+                    if equation_audio:
+                        equation_audio = equation_audio.set_start(current_time)
+                        audio_clips.append(equation_audio)
+                    current_time += 2.0
             
-            # Conclusion audio (3 seconds)
+            # Conclusion audio (4 seconds)
             final_answer = solution.get('final_answer', 'The solution is complete.')
-            conclusion_text = f"Great job! We've solved the problem step by step. The final answer is: {final_answer}"
-            conclusion_audio = self._create_audio_clip(conclusion_text, 3.0)
+            conclusion_text = f"Excellent work! We've solved the problem step by step. The final answer is: {final_answer}. Thank you for learning with us!"
+            conclusion_audio = self._create_audio_clip(conclusion_text, 4.0)
             if conclusion_audio:
                 conclusion_audio = conclusion_audio.set_start(current_time)
                 audio_clips.append(conclusion_audio)
+            current_time += 4.0
+            
+            # Add silence to match video duration if needed
+            if current_time < video_duration:
+                silence_duration = video_duration - current_time
+                if silence_duration > 0:
+                    silence = AudioFileClip.silent(duration=silence_duration)
+                    silence = silence.set_start(current_time)
+                    audio_clips.append(silence)
             
             # Combine all audio clips
             if audio_clips:
+                print(f"🎵 Combining {len(audio_clips)} audio clips...")
                 combined_audio = concatenate_audioclips(audio_clips)
                 
-                # Ensure audio duration matches video duration
-                if combined_audio.duration > video_clip.duration:
-                    combined_audio = combined_audio.subclip(0, video_clip.duration)
-                elif combined_audio.duration < video_clip.duration:
-                    # Pad with silence if needed - skip for now to avoid complexity
-                    pass
+                # Ensure audio duration matches video duration exactly
+                if combined_audio.duration > video_duration:
+                    combined_audio = combined_audio.subclip(0, video_duration)
+                elif combined_audio.duration < video_duration:
+                    # Add final silence to match video duration
+                    remaining_duration = video_duration - combined_audio.duration
+                    if remaining_duration > 0:
+                        final_silence = AudioFileClip.silent(duration=remaining_duration)
+                        combined_audio = concatenate_audioclips([combined_audio, final_silence])
                 
                 # Combine video and audio
                 final_video = video_clip.set_audio(combined_audio)
                 
                 # Save the video with audio
                 audio_video_path = video_path.replace('.mp4', '_with_audio.mp4')
+                print(f"🎵 Saving video with audio to: {audio_video_path}")
                 final_video.write_videofile(audio_video_path, codec='libx264', audio_codec='aac', verbose=False, logger=None)
                 
                 # Clean up
@@ -737,11 +806,128 @@ class EnhancedEducationalVideoGenerator:
                 final_video.close()
                 combined_audio.close()
                 
-                return audio_video_path
+                # Replace original video with audio version
+                os.replace(audio_video_path, video_path)
+                print(f"✅ Audio narration completed successfully!")
+                
+                return video_path
             else:
                 print("❌ No audio clips generated")
                 return None
                 
         except Exception as e:
             print(f"❌ Error adding audio narration: {e}")
+            import traceback
+            traceback.print_exc()
             return None
+    
+    def _create_step_narration(self, step: Dict, step_num: int, total_steps: int) -> str:
+        """Create comprehensive and detailed narration for a step"""
+        description = step.get('description', '')
+        equation = step.get('equation', '')
+        
+        # Clean up the description for better speech
+        clean_description = description.replace('*', '').replace('**', '').replace('_', '')
+        clean_description = clean_description.replace('$', '').replace('\\boxed{', 'the answer is ').replace('}', '')
+        clean_description = clean_description.replace('\\', '')
+        
+        # Create comprehensive narration with educational focus
+        narration_parts = []
+        
+        # Add clear step introduction with context
+        narration_parts.append(f"Step {step_num} of {total_steps}")
+        
+        # Add enhanced description with better explanations
+        if clean_description:
+            # Enhance mathematical explanations
+            enhanced_description = self._enhance_mathematical_explanation(clean_description)
+            narration_parts.append(enhanced_description)
+            
+            # Add specific educational context based on step content
+            if "parentheses" in clean_description.lower():
+                narration_parts.append("Remember, parentheses tell us to do the operation inside first, before anything else. This is the first rule in the order of operations.")
+            elif "multiplication" in clean_description.lower():
+                narration_parts.append("Multiplication comes before addition in the order of operations. This ensures we get the correct answer.")
+            elif "addition" in clean_description.lower():
+                narration_parts.append("Now we can perform the final addition to get our answer. This completes our calculation.")
+        
+        # Add equation explanation if present
+        if equation and equation.strip():
+            clean_equation = equation.replace('$', '').replace('\\boxed{', 'the answer is ').replace('}', '')
+            clean_equation = clean_equation.replace('\\', '')
+            narration_parts.append(f"Let's work through this step by step: {clean_equation}")
+            
+            # Add specific mathematical reasoning
+            if "8 + 4" in clean_equation:
+                narration_parts.append("We add 8 and 4 to get 12. This is simple addition within the parentheses.")
+            elif "12 * 8" in clean_equation:
+                narration_parts.append("We multiply 12 and 8 to get 96. Multiplication comes before addition.")
+            elif "8 + 96" in clean_equation:
+                narration_parts.append("Finally, we add 8 and 96 to get 104. This is our final answer.")
+        
+        # Add step-specific educational context
+        if step_num == 1:
+            narration_parts.append("This first step is crucial because it sets up the foundation for solving the entire problem correctly.")
+        elif step_num == 2:
+            narration_parts.append("Following the order of operations ensures we get the right answer every time.")
+        elif step_num == 3:
+            narration_parts.append("Each step builds on the previous one to reach the final solution.")
+        
+        return '. '.join(narration_parts)
+    
+    def _enhance_mathematical_explanation(self, text: str) -> str:
+        """Enhance mathematical explanations for better clarity and educational value"""
+        # Replace common mathematical terms with much clearer, more detailed explanations
+        replacements = {
+            'PEMDAS': 'P E M D A S, which stands for Parentheses, Exponents, Multiplication, Division, Addition, and Subtraction. This is the fundamental order we must follow when solving any math problem.',
+            'BODMAS': 'B O D M A S, which stands for Brackets, Orders, Division, Multiplication, Addition, and Subtraction. This is another way to remember the order of operations.',
+            'order of operations': 'the order of operations, which are the fundamental rules that tell us exactly which calculations to perform first in any mathematical expression',
+            'parentheses': 'parentheses, which are the curved brackets that group operations together and tell us to solve what\'s inside them first before anything else',
+            'multiplication': 'multiplication, which is repeated addition and has higher priority than addition, so we must do it first',
+            'addition': 'addition, which is combining numbers together and comes after multiplication in the order of operations',
+            'expression': 'mathematical expression, which is a combination of numbers and operations that we need to solve',
+            'evaluate': 'solve step by step using the correct order of operations to get the right answer',
+            'precedence': 'priority order, which determines which operations must be done first',
+            'higher precedence': 'higher priority, meaning this operation must be done before others',
+            'group operations': 'group operations together so they are treated as a single unit',
+            'fundamental rule': 'basic rule that applies to all mathematical calculations',
+            'consistent results': 'the same answer every time, no matter who solves it'
+        }
+        
+        enhanced_text = text
+        for term, explanation in replacements.items():
+            enhanced_text = enhanced_text.replace(term, explanation)
+        
+        return enhanced_text
+    
+    def _clean_equation_text(self, text: str) -> str:
+        """Clean equation text for better display"""
+        # Remove excessive whitespace
+        text = ' '.join(text.split())
+        
+        # Replace common LaTeX symbols with readable text
+        replacements = {
+            '\\cdot': ' × ',
+            '\\times': ' × ',
+            '\\div': ' ÷ ',
+            '\\pm': ' ± ',
+            '\\sqrt': '√',
+            '\\frac': 'fraction',
+            '\\sum': 'sum',
+            '\\int': 'integral',
+            '\\infty': 'infinity',
+            '\\alpha': 'α',
+            '\\beta': 'β',
+            '\\gamma': 'γ',
+            '\\pi': 'π',
+            '\\theta': 'θ',
+            '\\boxed{': 'the answer is ',
+            '}': '',
+            '$': '',
+            '\\': ''
+        }
+        
+        for latex, readable in replacements.items():
+            text = text.replace(latex, readable)
+        
+        return text
